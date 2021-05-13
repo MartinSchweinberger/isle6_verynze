@@ -8,6 +8,11 @@ bibliography: bibliography.bib
 link-citations: yes
 ---
 
+```{r uq1, echo=F, fig.cap="", message=FALSE, warning=FALSE, out.width='100%'}
+knitr::include_graphics("https://slcladal.github.io/images/isle6.png")
+```
+
+
 This document documents the analysis of the adjective amplifier *very* in New Zealand English. The analysis was performed with the aim of fitting a generalized-linear binomial logistic mixed-effects regression to explain which factors correlate with the use of *very* and to ascertain if 
 
 1. *very* is decreasing across apparent time 

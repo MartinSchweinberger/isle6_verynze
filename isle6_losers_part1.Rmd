@@ -8,6 +8,11 @@ bibliography: bibliography.bib
 link-citations: yes
 ---
 
+```{r uq1, echo=F, fig.cap="", message=FALSE, warning=FALSE, out.width='100%'}
+knitr::include_graphics("https://slcladal.github.io/images/isle6.png")
+```
+
+
 This document documents the analysis of the adjective amplifier *very* in New Zealand English. The analysis was performed with the aim of fitting a generalized-linear binomial logistic mixed-effects regression to explain which factors correlate with the use of *very* and to ascertain if 
 
 1. *very* is decreasing across apparent time 
@@ -274,7 +279,7 @@ head(wscadjdf)
 
 
 
-```{r dp1_07, message=F, warning=F}
+```{r dp1_08, message=F, warning=F}
 # save raw data to disc
 write.table(wscadjdf, here::here("data", "wscadjdf.txt"), sep = "\t", row.names = F, col.names = T)
 wscadjdf <- read.delim(here::here("data", "wscadjdf.txt"), sep = "\t", header = T, skipNul = T)
@@ -436,7 +441,7 @@ nrow(wscadjdf); head(wscadjdf); table(wscadjdf$Variant)
 
 ## Code Priming{-}
 
-```{r dp1_02, message=F, warning=F}
+```{r dp1_20, message=F, warning=F}
 # code priming
 prim1 <- c(rep(0, 1), wscadjdf$Variant[1:length(wscadjdf$Variant)-1])
 prim2 <- c(rep(0, 2), wscadjdf$Variant[1:(length(wscadjdf$Variant)-2)])
@@ -464,7 +469,7 @@ str(wscadjdf); head(wscadjdf); nrow(wscadjdf)
 
 ## Remoive negated forms et al.{-}
 
-```{r dp1_02, message=F, warning=F}
+```{r dp1_22, message=F, warning=F}
 # find items to be removed
 supsidx <- unique(grep(paste(sups,collapse="|"), wscadjdf$PreContextLong, value=F))
 negsidx <- unique(grep(paste(negs,collapse="|"), wscadjdf$PreContextLong, value=F))
@@ -482,7 +487,7 @@ wscadjdf <- wscadjdf[!wscadjdf$Variant == "", ]
 
 
 
-```{r dp1_02, message=F, warning=F}
+```{r dp1_23, message=F, warning=F}
 # save raw data to disc
 write.table(wscadjdf, here::here("data", "wscadjdf_wo_neg.txt"), sep = "\t", row.names = F)
 wscadjdf <- read.delim(here::here("data", "wscadjdf_wo_neg.txt"), sep = "\t", header = T, skipNul = T)
@@ -492,7 +497,10 @@ wscadjdf <- read.delim(here::here("data", "wscadjdf_wo_neg.txt"), sep = "\t", he
 
 Remove variants that were not intensified by at least 2 different amplifier variants
 
-```{r dp1_02, eval = F, message=F, warning=F}
+> NOT EXECTUTED!
+
+```{r dp1_24, eval = F, message=F, warning=F}
+nrow(wscadjdf)
 # remove items that were not intensified by a minimum of 2 intensifier variants
 pintadjtb <- table(wscadjdf$Adjective, wscadjdf$Variant)
 #pintadjtb <- pintadjtb[2:nrow(pintadjtb),]
@@ -507,63 +515,88 @@ nrow(wscadjdf)
 
 ## Remove misspelled forms {-}
 
-```{r dp1_02, eval = F, message=F, warning=F}
+```{r dp1_26, eval = F, message=F, warning=F}
 # inspect adjectives
 names(table(wscadjdf$Adjective))
 ```
 
 Remove words not in dictionary or consist only of 1 or 2 characters
 
-```{r}
+```{r dp1_27, message=F, warning=F}
 # correct spelling
 library(hunspell)
-test <- wscadjdf %>%
+wscadjdf <- wscadjdf %>%
   dplyr::filter(hunspell_check(Adjective)) %>%
   dplyr::filter(nchar(Adjective) > 2)
 # inspect
-head(test)
+head(wscadjdf)
 ```
 
 
 
 ## Remove strange forms{-}
 
-```{r dp1_02, eval = F, message=F, warning=F}
+```{r dp1_29, message=F, warning=F}
 # inspect adjectives
 names(table(wscadjdf$Adjective))
 ```
 
+Remove mistagged items
 
-
-
-
-```{r dp1_02, message=F, warning=F}
-# create vector with false adjectives
-rmvadj <- c("cos", "di", "er", "g", "helen", "i", "l", "lower", "more", 
-            "most", "nah", "ohakune", "overall", "pete", "super", "t", 
-            "tara", "tony", "ultra", "um", "un", "w", "wh", "yep")
-wscadjdf$remove <- ifelse(wscadjdf$Adjective %in% rmvadj, "remove", wscadjdf$Adjective)
-wscadjdf <- wscadjdf[wscadjdf$remove != "remove",]
-wscadjdf$remove <- NULL
-# inspect data
-nrow(wscadjdf); length(table(wscadjdf$Adjective)); head(wscadjdf)
+```{r dp1_30, message=F, warning=F}
+library(udpipe)
+#model <- udpipe_download_model(language = "english")
+udmodel_english <- udpipe_load_model(file = here::here("english-ewt-ud-2.5-191206.udpipe"))
+udpipe_adjectives <- udpipe_annotate(udmodel_english, wscadjdf$Adjective) %>%
+  data.frame() %>%
+  dplyr::filter(xpos == "JJ") %>%
+  dplyr::pull(sentence)
+# inspect
+head(udpipe_adjectives)
 ```
+
+```{r dp1_31, message=F, warning=F}
+nrow(wscadjdf)
+wscadjdf <-wscadjdf %>%
+  dplyr::filter(Adjective %in% udpipe_adjectives)
+# inspect
+nrow(wscadjdf)
+```
+
+Remove adjectives that were never amplified
+
+
+```{r dp1_32, message=F, warning=F}
+amp_adjs <- wscadjdf %>%
+  dplyr::filter(Amplified == 1) %>%
+  dplyr::pull(Adjective) %>%
+  table() %>%
+  names()
+# inspect
+head(amp_adjs)
+```
+```{r dp1_33, message=F, warning=F}
+nrow(wscadjdf)
+wscadjdf <- wscadjdf %>%
+  dplyr::filter(Adjective %in% amp_adjs)
+nrow(wscadjdf)
+```
+
 
 Save data to disc
 
-```{r dp1_02, message=F, warning=F}
+```{r dp1_35, message=F, warning=F}
 # save raw data to disc
 write.table(wscadjdf, here::here("data", "wscadjdf_clean.txt"), sep = "\t", row.names = F)
 wscadjdf <- read.delim(here::here("data", "wscadjdf_clean.txt"), sep = "\t", header = T, skipNul = T)
-
 ```
 
 ## Gradability{-}
 
-```{r dp1_02, message=F, warning=F}
+```{r dp1_36, message=F, warning=F}
 # code gradability
 # load Gradability data (derived from COCA)
-gradability <- read.delim("D:\\Uni\\Projekte\\09-GradabilityOfAdjectives/Gradability.txt", sep = "\t", header = T, quote = "", skipNul = T)
+gradability <- read.delim(here::here("data", "Gradability.txt"), sep = "\t", header = T, quote = "", skipNul = T)
 wscadjdf$Gradability <- ifelse(wscadjdf$Adjective %in% gradability$Adjective, gradability$Beta, 1)
 # inspect data
 nrow(wscadjdf); head(wscadjdf)
@@ -593,7 +626,7 @@ Add semantic types [@tagliamonte2008intensifiers, @dixon1977adjectives]
 
 * other
 
-```{r dp1_02, message=F, warning=F}
+```{r dp1_37, message=F, warning=F}
 # load data
 code1 <- read.delim(here::here("data", "semcodecg1.txt"), sep = "\t", header = T, skipNul = T)
 code2 <- read.delim(here::here("data", "semcodedjm1.txt"), sep = "\t", header = T, skipNul = T)
@@ -616,7 +649,6 @@ code3$Adjective <- code1$Adjective
 semcode <- rbind(code1, code2, code3, code4, code5, code6, code7)
 # convert coding into numeric values
 semcode[,3:12] <- t(apply(semcode[,3:12], 1, function(x) {
-#  x <- ifelse(x == "" | is.na(x) == T, 0, 1)}))
   x <- ifelse(x == "" | x == "?"| is.na(x) == T, 0, 1)}))
 # convert into data frame
 semcode <- as.data.frame(semcode)
@@ -624,16 +656,25 @@ semcode <- as.data.frame(semcode)
 colnames(semcode)[3:12] <- c("Dimension", "Difficulty", "PhysicalProperty", "Color",
                              "HumanPropensity", "Age", "Value", "Speed", "Position", 
                              "Other")
+```
+
+
+```{r dp1_38, message=F, warning=F}
 # load package
 library(dplyr)
 AdjectiveSemantics <- semcode %>%
   dplyr::group_by(Adjective) %>%
   na.omit() %>%
-  dplyr::summarize(Dimension = sum(Dimension), Difficulty = sum(Difficulty),
-                PhysicalProperty = sum(PhysicalProperty), Color = sum(Color),
-                HumanPropensity = sum(HumanPropensity), Age = sum(Age),
-                Value = sum(Value), Speed = sum(Speed),
-                Position = sum(Position), Other = sum(Other)) %>%
+  dplyr::summarize(Dimension = sum(Dimension), 
+                   Difficulty = sum(Difficulty),
+                   PhysicalProperty = sum(PhysicalProperty), 
+                   Color = sum(Color),
+                   HumanPropensity = sum(HumanPropensity), 
+                   Age = sum(Age),
+                   Value = sum(Value), 
+                   Speed = sum(Speed),
+                   Position = sum(Position), 
+                   Other = sum(Other)) %>%
   dplyr::mutate(OverallScore = rowSums(.[,2:11])) %>%
   dplyr::mutate(Maximum = do.call(pmax, (.[,2:11]))) %>%
   dplyr::mutate(Certainty = Maximum/OverallScore*100)
@@ -643,38 +684,46 @@ AdjectiveSemantics <- AdjectiveSemantics %>%
 summary(AdjectiveSemantics$Certainty)
 ```
 
-
-
-```{r dp1_02, message=F, warning=F}
-# create vectors
-Age <- as.vector(unlist(AdjectiveSemantics %>%
-                   dplyr::filter(Category == "Age") %>% select(Adjective)))
-Color <- as.vector(unlist(AdjectiveSemantics %>%
-                          dplyr::filter(Category == "Color") %>% select(Adjective)))
-Difficulty <- as.vector(unlist(AdjectiveSemantics %>%
-                          dplyr::filter(Category == "Difficulty") %>% select(Adjective)))
-Dimension <- as.vector(unlist(AdjectiveSemantics %>%
-                          dplyr::filter(Category == "Dimension") %>% select(Adjective)))
-HumanPropensity <- as.vector(unlist(AdjectiveSemantics %>%
-                          dplyr::filter(Category == "HumanPropensity") %>% select(Adjective)))
-PhysicalProperty <- as.vector(unlist(AdjectiveSemantics %>%
-                          dplyr::filter(Category == "PhysicalProperty") %>% select(Adjective)))
-Position <- as.vector(unlist(AdjectiveSemantics %>%
-                                       dplyr::filter(Category == "Position") %>% select(Adjective)))
-Speed <- as.vector(unlist(AdjectiveSemantics %>%
-                                       dplyr::filter(Category == "Speed") %>% select(Adjective)))
-Value <- as.vector(unlist(AdjectiveSemantics %>%
-                            dplyr::filter(Category == "Value") %>% select(Adjective)))
+```{r dp1_39, message=F, warning=F}
+Age <- AdjectiveSemantics %>%
+  dplyr::filter(Age != 0) %>%
+  dplyr::pull(Adjective)
+Color <- AdjectiveSemantics %>%
+  dplyr::filter(Color != 0) %>%
+  dplyr::pull(Adjective)
+Difficulty <- AdjectiveSemantics %>%
+  dplyr::filter(Difficulty != 0) %>%
+  dplyr::pull(Adjective)
+Dimension <- AdjectiveSemantics %>%
+  dplyr::filter(Dimension != 0) %>%
+  dplyr::pull(Adjective)
+HumanPropensity <- AdjectiveSemantics %>%
+  dplyr::filter(HumanPropensity != 0) %>%
+  dplyr::pull(Adjective)
+PhysicalProperty <- AdjectiveSemantics %>%
+  dplyr::filter(PhysicalProperty != 0) %>%
+  dplyr::pull(Adjective)
+Position <- AdjectiveSemantics %>%
+  dplyr::filter(Position != 0) %>%
+  dplyr::pull(Adjective)
+Speed <- AdjectiveSemantics %>%
+  dplyr::filter(Speed != 0) %>%
+  dplyr::pull(Adjective)
+Value <- AdjectiveSemantics %>%
+  dplyr::filter(Value != 0) %>%
+  dplyr::pull(Adjective)
 # add semantic category to data
-wscadjdf$SemanticCategory <- ifelse(wscadjdf$Adjective %in% Age, "Age",
-                                    ifelse(wscadjdf$Adjective %in% Color, "Color",
-                                    ifelse(wscadjdf$Adjective %in% Difficulty, "Difficulty",
-                                    ifelse(wscadjdf$Adjective %in% Dimension, "Dimension",
-                                    ifelse(wscadjdf$Adjective %in% HumanPropensity, "HumanPropensity",
-                                    ifelse(wscadjdf$Adjective %in% PhysicalProperty, "PhysicalProperty",
-                                    ifelse(wscadjdf$Adjective %in% Position, "Position",
-                                    ifelse(wscadjdf$Adjective %in% Speed, "Speed",
-                                    ifelse(wscadjdf$Adjective %in% Value, "Value", "Other")))))))))
+wscadjdf <- wscadjdf %>%
+  dplyr::mutate(SemanticCategory = dplyr::case_when(Adjective %in% Age ~ "Age",
+                                                    Adjective %in% Color ~ "Color",
+                                                    Adjective %in% Difficulty ~ "Difficulty",
+                                                    Adjective %in% Dimension ~ "Dimension",
+                                                    Adjective %in% HumanPropensity ~ "HumanPropensity",
+                                                    Adjective %in% PhysicalProperty ~ "PhysicalProperty",
+                                                    Adjective %in% Position ~ "Position",
+                                                    Adjective %in% Speed ~ "Speed",
+                                                    Adjective %in% Value ~ "Value", 
+                                                    TRUE ~ "Other"))
 # table sem class of tokens
 table(wscadjdf$SemanticCategory)
 ```
@@ -682,20 +731,27 @@ table(wscadjdf$SemanticCategory)
 
 ## Sentiment Analysis{-}
 
-```{r dp1_02, message=F, warning=F}
-# code emotion
-library(syuzhet)
-class_emo <- get_nrc_sentiment(wscadjdf$Adjective)
-# process sentiment
-wscadjdf$Emotionality <- as.vector(unlist(apply(class_emo, 1, function(x){
-  x <- ifelse(x[9] == 1, "NegativeEmotional",
-              ifelse(x[10] == 1, "PositiveEmotional", "NonEmotional")) } )))
-# revert order of factor Emotionality
-wscadjdf$Emotionality <- factor(wscadjdf$Emotionality, levels = c("NonEmotional", "NegativeEmotional", "PositiveEmotional"))
+```{r dp1_40, message=F, warning=F}
+# positive adjectives
+pos_adj <- tidytext::get_sentiments("nrc") %>%
+  dplyr::filter(sentiment == "positive") %>%
+  dplyr::pull(word)
+# negative adjectives
+neg_adj <- tidytext::get_sentiments("nrc") %>%
+  dplyr::filter(sentiment == "negative") %>%
+  dplyr::pull(word)
+# annotate emotionality
+wscadjdf <- wscadjdf %>%
+  dplyr::mutate(Emotionality = dplyr::case_when(Adjective %in% pos_adj ~ "positive",
+                                                Adjective %in% neg_adj ~ "negative",
+                                                TRUE ~ "neutral")) %>%
+  dplyr::mutate(Emotionality = factor(Emotionality, levels = c("neutral", "negative", "positive")))
+# inspect
+head(wscadjdf)
 ```
 
 
-```{r intro06, echo = F, message=FALSE, warning=FALSE}
+```{r intro41, echo = F, message=FALSE, warning=FALSE}
 # inspect data
 wscadjdf %>%
   head(20) %>%
@@ -705,7 +761,7 @@ wscadjdf %>%
 ```
 
 
-```{r dp1_02, message=F, warning=F}
+```{r dp1_44, message=F, warning=F}
 # save raw data to disc
 write.table(wscadjdf, here::here("data", "wsc_fullclean.txt"), sep = "\t", row.names = F, col.names = T)
 ```
