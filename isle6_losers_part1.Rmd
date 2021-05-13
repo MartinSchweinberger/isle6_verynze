@@ -490,9 +490,9 @@ wscadjdf <- read.delim(here::here("data", "wscadjdf_wo_neg.txt"), sep = "\t", he
 
 ## Remove lexicalizations 
 
-Remove variants that were not intensified by at leat 2 different amplifier variantss
+Remove variants that were not intensified by at least 2 different amplifier variants
 
-```{r dp1_02, message=F, warning=F}
+```{r dp1_02, eval = F, message=F, warning=F}
 # remove items that were not intensified by a minimum of 2 intensifier variants
 pintadjtb <- table(wscadjdf$Adjective, wscadjdf$Variant)
 #pintadjtb <- pintadjtb[2:nrow(pintadjtb),]
@@ -505,14 +505,37 @@ wscadjdf <- wscadjdf[wscadjdf$Adjective %in% pintadjschildes, ]
 nrow(wscadjdf)
 ```
 
-## Remove strange forms{-}
+## Remove misspelled forms {-}
 
-```{r dp1_02, message=F, warning=F}
+```{r dp1_02, eval = F, message=F, warning=F}
 # inspect adjectives
 names(table(wscadjdf$Adjective))
 ```
 
-Clean adjectives
+Remove words not in dictionary or consist only of 1 or 2 characters
+
+```{r}
+# correct spelling
+library(hunspell)
+test <- wscadjdf %>%
+  dplyr::filter(hunspell_check(Adjective)) %>%
+  dplyr::filter(nchar(Adjective) > 2)
+# inspect
+head(test)
+```
+
+
+
+## Remove strange forms{-}
+
+```{r dp1_02, eval = F, message=F, warning=F}
+# inspect adjectives
+names(table(wscadjdf$Adjective))
+```
+
+
+
+
 
 ```{r dp1_02, message=F, warning=F}
 # create vector with false adjectives
@@ -522,7 +545,7 @@ rmvadj <- c("cos", "di", "er", "g", "helen", "i", "l", "lower", "more",
 wscadjdf$remove <- ifelse(wscadjdf$Adjective %in% rmvadj, "remove", wscadjdf$Adjective)
 wscadjdf <- wscadjdf[wscadjdf$remove != "remove",]
 wscadjdf$remove <- NULL
-# inspecta data
+# inspect data
 nrow(wscadjdf); length(table(wscadjdf$Adjective)); head(wscadjdf)
 ```
 

@@ -35,14 +35,10 @@ We proceed by loading the data, factorizing variables that are so far represente
 verywsc <- read.delim(here::here("data", "ampwsc_regdat.txt"), sep = "\t", header = T, skipNul = T)
 # remove superfluous variables
 verywsc <- verywsc %>%
-  dplyr::select(-ID, - FileSpeaker, -Speaker, -File)
-# factorize variables 
-fctr <- c("Adjective", "Ethnicity", "Gender", "Education", "L1", "Age", 
-          "Function", "Priming", "SemanticCategory", "Emotionality", "very")
-verywsc[fctr] <- lapply(verywsc[fctr], factor)
+  dplyr::select(-ID, - FileSpeaker, -Speaker, -File, -Age_original) %>%
+  dplyr::mutate_if(is.character, factor)
 # inspect data
 nrow(verywsc); str(verywsc); head(verywsc); summary (verywsc)
-
 ```
 
 We will now scale numeric variables so that the estimates refer to the mean of the numeric variables rather than their true 0-point. This is neccessary as estimates for adjectives that occur with a frequency of 0 are nonsensical.
@@ -78,7 +74,7 @@ We now begin with the modelling. In a first step, we use a Boruta analysis as a 
 ```{r verynze_06, echo=T, eval = T, message=FALSE, warning=FALSE}
 # load library
 library(Boruta)
-# create dada for boruta
+# create data for boruta
 borutadata <- verywsc %>%
   na.omit()
 # save and load data
@@ -114,50 +110,43 @@ borutadata <- borutadata %>%
   dplyr::select(-rejected)
 # run 3
 set.seed(2019121203)
-boruta3 <- Boruta(very ~.,data=borutadata)
+boruta3 <- Boruta(very ~., data=borutadata)
 print(boruta3)
 ```
 
 No more variables need to be removed. We now inspect the visualizations of the Boruta analysis. 
 
 ```{r verynze_09, echo=T, eval = T, message=FALSE, warning=FALSE}
-png("images/BorutaVeryWsc.png",  width = 1800, height = 300)
-plot(boruta3, cex = .75)
-dev.off()
 plot(boruta3)
 ```
 
 In addition, we inspect the history of the Boruta runs. 
 
 ```{r verynze_10, echo=T, eval = T, message=FALSE, warning=FALSE}
-png("images/BorutaVeryWsc_History1.png",  width = 680, height = 480)
-plotImpHistory(boruta3)
-dev.off()
 plotImpHistory(boruta3)
 ```
 
 Now, we create the final publication visualization of the Boruta analysis. 
 
 ```{r verynze_11, echo=T, eval = T, message=FALSE, warning=FALSE}
-png("images/BorutaVeryWsc_final.png",  width = 1500, height = 750)
-par(mar = c(22, 8, 4, 2) + 0.1)
-plot(boruta3, cex.axis=2, las=2, xlab="", ylab = "", cex = 2, 
-     col = c(rep("grey50", 9), rep("grey90",3)))
-abline(v = 3.5, lty = "dashed")
-mtext("Predictors", 1, line = 21, at = 9, cex = 2)
-mtext("Control", 1, line = 21, at = 2, cex = 2)
-mtext("Importance", 2, line = 5, at = 25, cex = 2, las = 0)
-dev.off()
-plot(boruta3, cex.axis=2, las=2, xlab="", ylab = "", cex = 2, 
-     col = c(rep("grey50", 9), rep("grey90",3)))
-abline(v = 3.5, lty = "dashed")
-mtext("Predictors", 1, line = 21, at = 9, cex = 2)
-mtext("Control", 1, line = 21, at = 2, cex = 2)
-mtext("Importance", 2, line = 5, at = 25, cex = 2, las = 0)
-par(mar = c(5, 4, 4, 2) + 0.1)
+borutadf <- as.data.frame(boruta3$ImpHistory) %>%
+  gather(Variable, Importance, Adjective:shadowMin) %>%
+  mutate(Type = ifelse(str_detect(Variable, "shadow"), "Control", "Predictor")) %>%
+  mutate(Type = factor(Type),
+         Variable = factor(Variable))
+ggplot(borutadf, aes(x = reorder(Variable, Importance, mean), y = Importance, fill = Type)) + 
+  geom_boxplot() +
+  geom_vline(xintercept=3.5, linetype="dashed", color = "black") +
+  scale_fill_manual(values = c("gray80", "gray40")) +
+  theme_bw() + 
+  theme(legend.position = "top",
+        axis.text.x = element_text(angle=90)) +
+  labs(x = "Variable") +
+  ggsave(file =  here::here("images", "Boruta.png"), 
+         width = 15, height = 10, units = c("cm"),  dpi = 600)
 ```
 
-We begin with the model fitting by setting options and cerating intercept-only base-line models. 
+We begin with the model fitting by setting options and creating intercept-only base-line models. 
 
 ```{r verynze_12, echo=T, eval = T, message=FALSE, warning=FALSE}
 # load library
@@ -190,15 +179,7 @@ aic.glm <- AIC(logLik(m0.glm))
 aic.glmer; aic.glm
 ```
 
-The AIC of the glmer object is substantially smaller which indicates that including the random intercepts appears to be justified. We test this using a Likelihood Ratio test to check if the random effect structure significantly increases the model fit. 
-
-```{r verynze_15, echo=T, eval = T, message=FALSE, warning=FALSE}
-# test random effects
-null.id = -2 * logLik(m0.glm) + 2 * logLik(m0.glmer)
-pchisq(as.numeric(null.id), df=1, lower.tail=F) 
-```
-
-Both the AIC and the Likelihood Ratio test confirm that including a random effect structure is justified. We can now start with the model fitting using a step-wise step-up procedure. The cut-off value for collinearity among main effects is 5 and 30 for interactions. We continue by specifying the optimizer and adding a first fixed predictor (Age).
+The AIC of the glmer object is substantially smaller which indicates that including the random intercepts appears to be justified. We continue by specifying the optimizer and adding a first fixed predictor (Age).
 
 ```{r verynze_16, echo=T, eval = T, message=FALSE, warning=FALSE}
 #	manual modelfitting
@@ -206,7 +187,6 @@ m0.glmer <- glmer(very ~ 1 + (1|Adjective), family = binomial, data = verywsc,
                   control=glmerControl(optimizer="bobyqa"))
 # add Age
 ifelse(min(ftable(verywsc$Age, verywsc$very)) == 0, "not possible", "possible")
-m1.glm <- update(m0.glm, .~.+Age)
 m1.glmer <- update(m0.glmer, .~.+Age)
 anova(m0.glmer, m1.glmer, test = "Chi")
 Anova(m1.glmer, type = "III", test = "Chi")
@@ -216,9 +196,8 @@ Including Age significantly improves the model fit whih is why we retain it in t
 
 ```{r verynze_17, echo=T, eval = T, message=FALSE, warning=FALSE}
 # add Frequency
-m2.glm <- update(m1.glm, .~.+Frequency)
-max(vif(m2.glm)[,1])         
 m2.glmer <- update(m1.glmer, .~.+Frequency)
+car::vif(m2.glmer)
 anova(m2.glmer, m1.glmer, test = "Chi")  
 ```
 
@@ -227,9 +206,8 @@ Including Frequency does not cause excessive vifs but also does not significantl
 ```{r verynze_18a, echo=T, eval = T, message=FALSE, warning=FALSE}
 # add Emotionality
 ifelse(min(ftable(verywsc$Emotionality, verywsc$very)) == 0, "not possible", "possible")
-m3.glm <- update(m1.glm, .~.+Emotionality)
-max(vif(m3.glm)[,1])                                     
 m3.glmer <- update(m1.glmer, .~.+Emotionality)
+car::vif(m3.glmer)
 anova(m3.glmer, m1.glmer, test = "Chi")              
 Anova(m3.glmer, type = "III", test = "Chi")        
 ```
@@ -245,9 +223,8 @@ tab_model(m0.glmer, m3.glmer)
 ```{r verynze_19, echo=T, eval = T, message=FALSE, warning=FALSE}
 # add Ethnicity
 ifelse(min(ftable(verywsc$Ethnicity, verywsc$very)) == 0, "not possible", "possible")
-m4.glm <- update(m3.glm, .~.+Ethnicity)
-max(vif(m4.glm)[,1])                        
 m4.glmer <- update(m3.glmer, .~.+Ethnicity)
+car::vif(m4.glmer)
 anova(m4.glmer, m3.glmer, test = "Chi")       
 ```
 
@@ -256,9 +233,8 @@ Including Ethnicity does not cause excessive vifs but does not significantly imp
 ```{r verynze_20, echo=T, eval = T, message=FALSE, warning=FALSE}
 # add SemanticCategory
 ifelse(min(ftable(verywsc$SemanticCategory, verywsc$very)) == 0, "not possible", "possible")
-m5.glm <- update(m3.glm, .~.+SemanticCategory)
-max(vif(m5.glm)[,1])               
 m5.glmer <- update(m3.glmer, .~.+SemanticCategory)
+car::vif(m5.glmer)
 anova(m5.glmer, m3.glmer, test = "Chi")   
 Anova(m5.glmer, type = "III", test = "Chi")      
 ```
@@ -267,9 +243,8 @@ Including SemanticCategory does not cause excessive vifs but it does not improve
 
 ```{r verynze_21, echo=T, eval = T, message=FALSE, warning=FALSE}
 # add Gradability
-m6.glm <- update(m3.glm, .~.+Gradability)
-max(vif(m6.glm)[,1])                       
 m6.glmer <- update(m3.glmer, .~.+Gradability)
+car::vif(m5.glmer)
 anova(m6.glmer, m3.glmer, test = "Chi")    
 Anova(m6.glmer, type = "III", test = "Chi")  
 ```
