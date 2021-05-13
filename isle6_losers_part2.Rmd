@@ -65,39 +65,52 @@ head(very_attributive); head(very_predicative)
 #                  CLEAN DATA
 ampwsc <- ampwsc %>%
   dplyr::filter(Type == "Conversation") %>%
-  dplyr::select(- Text, -CleanText, -TextPOS, -OriginalString, 
+  dplyr::select(-Text, -CleanText, -TextPOS, -OriginalString, 
                 -ExtractMinutes, -Words.1, -PreContext, -PostContext,
                 -Minutes, -PreContextLong, -Id, - Topic, -Words, -Type) %>%
-  na.omit()
-# recode age
-ampwsc$Age <- ifelse(ampwsc$Age == "16-19", "16-19",
-                     ifelse(ampwsc$Age == "20-24", "20-29",
-                            ifelse(ampwsc$Age == "25-29", "20-29",
-                                   ifelse(ampwsc$Age == "30-34", "30-39",
-                                          ifelse(ampwsc$Age == "35-39", "30-39",
-                                                 ifelse(ampwsc$Age == "40-44", "40-49",
-                                                        ifelse(ampwsc$Age == "45-49", "40-49",
-                                                               ifelse(ampwsc$Age == "50-54", "50-59",
-                                                                      ifelse(ampwsc$Age == "55-59", "50-59", "60+"))))))))) 
-# create a numeric age variable
-ampwsc$AgeNumeric <- ifelse(ampwsc$Age == "16-19", 17.5,
-                     ifelse(ampwsc$Age == "20-24", 22,
-                            ifelse(ampwsc$Age == "25-29", 27,
-                                   ifelse(ampwsc$Age == "30-34", 32,
-                                          ifelse(ampwsc$Age == "35-39", 37,
-                                                 ifelse(ampwsc$Age == "40-44", 42,
-                                                        ifelse(ampwsc$Age == "45-49", 47,
-                                                               ifelse(ampwsc$Age == "50-54", 52,
-                                                                      ifelse(ampwsc$Age == "55-59", 57,
-                                                                             ifelse(ampwsc$Age == "60-54", 62,
-                                                                                    ifelse(ampwsc$Age == "65-69", 67,
-                                                                                           ifelse(ampwsc$Age == "70-74", 72,
-                                                                                                  ifelse(ampwsc$Age == "75-79", 77,
-                                                                                                         ifelse(ampwsc$Age == "80-84", 82,
-                                                                                                                ifelse(ampwsc$Age == "85-89", 87,
-                                                                                                                       ifelse(ampwsc$Age == "90+", 90, NA))))))))))))))))
-summary(ampwsc$AgeNumeric)
+  na.omit() %>%
+  # recode age
+  dplyr::mutate(Age_original = Age,
+                # simplify age
+                Age = dplyr::case_when(Age == "16-19" ~ "16-19",
+                                       Age == "20-24" ~ "20-29",
+                                       Age == "25-29" ~ "20-29",
+                                       Age == "30-34" ~ "30-39",
+                                       Age == "35-39" ~ "30-39",
+                                       Age == "40-44" ~ "40-49",
+                                       Age == "45-49" ~ "40-49",
+                                       Age == "50-54" ~ "50-59",
+                                       Age == "55-59" ~ "50-59",
+                                       Age == "60-64" ~ "60+",
+                                       Age == "65-69" ~ "60+",
+                                       Age == "70-74" ~ "60+",
+                                       Age == "75-79" ~ "60+",
+                                       Age == "80-84" ~ "60+",
+                                       Age == "85-89" ~ "60+",
+                                       Age == "90+" ~ "60+",
+                                       TRUE ~ Age),
+                # create numeric age
+                AgeNumeric = dplyr::case_when(Age_original == "16-19" ~ 17.5,
+                                              Age_original == "20-24" ~ 22,
+                                              Age_original == "25-29" ~ 27,
+                                              Age_original == "30-34" ~ 32,
+                                              Age_original == "35-39" ~ 37,
+                                              Age_original == "40-44" ~ 42,
+                                              Age_original == "45-49" ~ 47,
+                                              Age_original == "50-54" ~ 52,
+                                              Age_original == "55-59" ~ 57,
+                                              Age_original == "60-54" ~ 62,
+                                              Age_original == "65-69" ~ 67,
+                                              Age_original == "70-74" ~ 72,
+                                              Age_original == "75-79" ~ 77,
+                                              Age_original == "80-84" ~ 82,
+                                              Age_original == "85-89" ~ 87,
+                                              Age_original == "90+" ~ 90))
+# inspect
+table(ampwsc$Age); summary(ampwsc$AgeNumeric)
+```
 
+```{r dp2_05, message=F, warning=F}
 # recode education
 University <- c("1.5 YRS UNIVERSITY", "1ST YEAR BA", "1ST YEAR BA/LLB", 
                 "2 YRS UNI", "2ND YEAR UNIVERSITY",  "3RD YEAR UNIVERSITY",  
