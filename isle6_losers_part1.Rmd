@@ -285,7 +285,7 @@ write.table(wscadjdf, here::here("data", "wscadjdf.txt"), sep = "\t", row.names 
 wscadjdf <- read.delim(here::here("data", "wscadjdf.txt"), sep = "\t", header = T, skipNul = T)
 ```
 
-## Process Biodata{-}
+## Process sociodemographic data{-}
 
 ```{r dp1_010, message=F, warning=F}
 # load files
@@ -307,11 +307,18 @@ extractswsc <- extractswsc %>%
   dplyr::rename(File = V1, Words = V2, Date = V3, Topic = V4, 
                 ExtractMinutes = V5, Minutes = V6)
 # join biowsc and linkwsc
-wscspeakerinformation <- join(biowsc, linkwsc, by = "Id")
-wscspeakerinformation <- join(wscspeakerinformation, extractswsc, by = "File")
-# add infromation about type
-wscspeakerinformation$Type <- wscspeakerinformation$File %>%
-  str_replace_all("[0-9]", "") %>%
+wscspeakerinformation <- dplyr::left_join(biowsc, linkwsc, by = "Id")
+wscspeakerinformation <- dplyr::left_join(wscspeakerinformation, extractswsc, by = "File")
+```
+
+
+
+```{r dp1_010, message=F, warning=F}
+# add information about type
+wscspeakerinformation <- wscspeakerinformation %>%
+  dplyr::mutate(Type = File) %>%
+  dplyr::mutate(Type %>%
+  str_remove_all("[0-9]") %>%
   str_replace_all("MSN", "BroadcastNews") %>%
   str_replace_all("MST", "BroadcastMonologue") %>%
   str_replace_all("MSW", "BroadcastWeather") %>%
@@ -326,7 +333,7 @@ wscspeakerinformation$Type <- wscspeakerinformation$File %>%
   str_replace_all("DGB", "RadioTalkback") %>%
   str_replace_all("DGI", "BroadcastInterview") %>%
   str_replace_all("DGU", "ParliamentaryDebate") %>%
-  str_replace_all("DGZ", "TransactionsAndMeetings")
+  str_replace_all("DGZ", "TransactionsAndMeetings"))
 # inspect speaker information
 head(wscspeakerinformation); nrow(wscspeakerinformation)
 ```
