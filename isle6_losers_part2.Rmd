@@ -70,10 +70,18 @@ head(very_attributive); head(very_predicative)
 ```{r dp2_04, message=F, warning=F}
 #                  CLEAN DATA
 ampwsc <- ampwsc %>%
-  dplyr::filter(Type == "Conversation") %>%
+#  dplyr::mutate(Type = dplyr::case_when(Type == "BroadcastMonologue" ~ "formal",
+#                                        Type == "BroadcastNews" ~ "formal",
+#                                        Type == "BroadcastWeather" ~ "formal",
+#                                        Type == "JudgesSummation" ~ "formal",
+#                                        Type == "Lecture" ~ "formal",
+#                                        Type == "ParliamentaryDebate" ~ "formal",
+#                                        Type == "TeacherMonologue" ~ "formal",
+#                                        Type == "TransactionsAndMeetings" ~ "formal",
+#                                        TRUE ~ "informal")) %>%
   dplyr::select(-Text, -CleanText, -TextPOS, -OriginalString, 
-                -ExtractMinutes, -Words.1, -PreContext, -PostContext,
-                -Minutes, -PreContextLong, -Id, - Topic, -Words, -Type) %>%
+                -ExtractMinutes, -WordsFile, -PreContext, -PostContext,
+                -Minutes, -PreContextLong, -Id, - Topic, -Words) %>%
   na.omit() %>%
   # recode age
   dplyr::mutate(Age_original = Age,
@@ -213,6 +221,51 @@ ampwsc %>%
         panel.grid.minor = element_blank(), 
         axis.line = element_line(colour = "black")) +
   ggsave(file =  here::here("images", "Percent_Amplified_Age.png"), 
+         width = 15, height = 10, units = c("cm"),  dpi = 600)
+```
+
+
+```{r dp2_08, message=F, warning=F}
+ampwsc %>%
+  dplyr::select(Age, Amplified, Variant) %>%
+  dplyr::filter(Amplified != "0") %>%
+  dplyr::mutate(Variant = dplyr::case_when(Variant == "very" ~ "very",
+                                           Variant == "really" ~ "really",
+                                           Variant == "so" ~ "so",
+                                           Variant == "pretty" ~ "pretty",
+                                           TRUE ~ "other")) %>%
+  dplyr::group_by(Age) %>%
+  dplyr::mutate(Amplified = n()) %>%
+  dplyr::group_by(Age, Variant) %>%
+  dplyr::mutate(VariantN = n()) %>%
+  dplyr::mutate_if(is.character, factor) %>%
+  dplyr::group_by(Age, Variant) %>%
+  dplyr::summarise(Percent = round(VariantN/Amplified*100, 2)) %>%
+  ggplot(aes(x = reorder(Age, desc(Age)), y = Percent, group = Variant, 
+             shape = Variant, color = Variant, linetype = Variant)) +
+  geom_line(alpha = .5) +
+  geom_point(size = 4) +
+  coord_cartesian(ylim = c(0, 100)) +
+  labs(x = "Age", y = "Percent of Amplification") +
+  guides(color=guide_legend(override.aes=list(fill=NA))) +
+  scale_linetype_manual(values=c(5:1),
+                        name="Variant",
+                        breaks = c("other", "pretty", "really", "so", "very"), 
+                        labels = c("other", "pretty", "really", "so", "very")) +
+  scale_colour_manual(values=rep("grey20",  5),
+                      name="Variant", 
+                      breaks=c("other", "pretty", "really", "so", "very"), 
+                      labels = c("other", "pretty", "really", "so", "very")) +
+  scale_shape_manual(values=c("o",  "p", "r",  "s", "v"),
+                      name="Variant", 
+                      breaks=c("other", "pretty", "really", "so", "very"), 
+                      labels = c("other", "pretty", "really", "so", "very")) +
+  theme_bw() +
+  theme(legend.position = "top",
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        axis.line = element_line(colour = "black")) +
+  ggsave(file =  here::here("images", "Percent_Variant_Age.png"), 
          width = 15, height = 10, units = c("cm"),  dpi = 600)
 ```
 
@@ -458,9 +511,14 @@ nrow(ampwsc); str(ampwsc)
 # Tables
 
 ```{r dp2_20, message=F, warning=F}
+tb1dat <- ampwsc
+hfvars <- names(table(tb1dat$Variant))[which(table(tb1dat$Variant) > 10)]
+tb1dat <- tb1dat %>%
+  dplyr::mutate(Variant = ifelse(Variant %in% hfvars, Variant, "other"))
+
 # tb 1
-Varianttbwsc <- table(ampwsc$Variant)
-Varianttbwsc <- Varianttbwsc[order(table(ampwsc$Variant), decreasing = T)]
+Varianttbwsc <- table(tb1dat$Variant)
+Varianttbwsc <- Varianttbwsc[order(table(tb1dat$Variant), decreasing = T)]
 Variantnames <- as.vector(names(Varianttbwsc))
 Variantn <- as.vector(Varianttbwsc)
 Variantprcnt <- round(Variantn/sum(Variantn)*100, 2)
@@ -470,23 +528,22 @@ colnames(tb1) <- c("Variant", "TokenFrequency", "PercentageSlots", "PercentAgeAm
 tb1 <- rbind(tb1, c("Total", sum(as.vector(tb1$TokenFrequency)), "", ""))
 rownames(tb1) <- NULL
 # inspect data
-head(tb1)
+tb1
 ```
 
 
 ```{r dp2_21, message=F, warning=F}
 # save data to disc
-write.table(tb1, "data/Table1.txt", sep = "\t", row.names = F)
+write.table(tb1, here::here("data", "Table1.txt"), sep = "\t", row.names = F)
 # WARNING: remove all non amplified rows
-ampwsc <- ampwsc %>%
-  dplyr::filter(Variant != "0") %>%
-  dplyr::select(-Variant)
+tb2dat <- tb1dat %>%
+  dplyr::filter(Variant != "0")
 ```
 
 
 ```{r dp2_22, message=F, warning=F}
 # create table
-Table2 <- ampwsc %>%
+Table2 <- tb2dat %>%
   dplyr::select(Age, Gender, FileSpeaker, very)  %>%
   dplyr::group_by(Age, Gender) %>%
   dplyr::summarize(Speakers = length(names(table(FileSpeaker))),

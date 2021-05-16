@@ -304,11 +304,13 @@ linkwsc <- linkwsc %>%
   dplyr::rename(File = V1, Id = V2, Speaker = V3, Words = V4)
 # add column names to extracts
 extractswsc <- extractswsc %>%
-  dplyr::rename(File = V1, Words = V2, Date = V3, Topic = V4, 
+  dplyr::rename(File = V1, WordsFile = V2, Date = V3, Topic = V4, 
                 ExtractMinutes = V5, Minutes = V6)
 # join biowsc and linkwsc
 wscspeakerinformation <- dplyr::left_join(biowsc, linkwsc, by = "Id")
 wscspeakerinformation <- dplyr::left_join(wscspeakerinformation, extractswsc, by = "File")
+# inspect
+head(wscspeakerinformation)
 ```
 
 
@@ -317,8 +319,8 @@ wscspeakerinformation <- dplyr::left_join(wscspeakerinformation, extractswsc, by
 # add information about type
 wscspeakerinformation <- wscspeakerinformation %>%
   dplyr::mutate(Type = File) %>%
-  dplyr::mutate(Type %>%
-  str_remove_all("[0-9]") %>%
+  dplyr::mutate(Type = Type %>%
+  str_remove_all("[0-9]{0,}") %>%
   str_replace_all("MSN", "BroadcastNews") %>%
   str_replace_all("MST", "BroadcastMonologue") %>%
   str_replace_all("MSW", "BroadcastWeather") %>%
@@ -543,7 +545,7 @@ head(wscadjdf)
 
 ## Remove strange forms{-}
 
-```{r dp1_29, message=F, warning=F}
+```{r dp1_29, eval = F, message=F, warning=F}
 # inspect adjectives
 names(table(wscadjdf$Adjective))
 ```
@@ -757,6 +759,27 @@ wscadjdf <- wscadjdf %>%
 head(wscadjdf)
 ```
 
+## Correct errors{-}
+
+```{r isle6_1_59, message=F, warning=F}
+wscadjdf %>%
+  dplyr::filter(Variant == "so") %>%
+  dplyr::group_by(Variant, Function) %>%
+  dplyr::summarize(Frequency = n())
+```
+
+
+```{r isle6_1_60, message=F, warning=F}
+wscadjdf <- wscadjdf %>%
+  dplyr::mutate(Function = ifelse(Variant == "so" & Function == "Attributive", "Predicative", Function))
+```
+
+```{r isle6_1_61, message=F, warning=F}
+wscadjdf %>%
+  dplyr::filter(Variant == "so") %>%
+  dplyr::group_by(Variant, Function) %>%
+  dplyr::summarize(Frequency = n())
+```
 
 ```{r intro41, echo = F, message=FALSE, warning=FALSE}
 # inspect data

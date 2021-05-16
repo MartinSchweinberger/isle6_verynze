@@ -1,4 +1,4 @@
-"Id"	"Ethnicity"	"Gender"	"Age"	"Occupation"	"Education"	"L1"	"File"	"Speaker"	"Words"	"Words"	"Date"	"Topic"	"ExtractMinutes"	"Minutes"	"Type"
+"Id"	"Ethnicity"	"Gender"	"Age"	"Occupation"	"Education"	"L1"	"File"	"Speaker"	"Words"	"WordsFile"	"Date"	"Topic"	"ExtractMinutes"	"Minutes"	"Type"
 3	"PAKEHA"	"Woman"	"35-39"	"LECTURER"	"MA"	"ENGLISH"	"MUL025"	"LN"	2370	2370	"12/2/92 "	"HOW TO GIVE LECTURE"	40	16	"Lecture"
 4	"PAKEHA"	"Woman"	"35-39"	"MINISTER OF THE CROWN"	"DIP TCH"	"ENGLISH"	"DGI070"	"JS"	1962	2309	"10/8/91 "	"SUPERANNUATION"	22	13	"BroadcastInterview"
 5	"PAKEHA"	"Woman"	"65-69"	"SELF EMPLOYED WRITER"	"MA"	"ENGLISH"	"DGI020"	"LE"	1668	2079	"3/5/91 "	""	20	11	"BroadcastInterview"
