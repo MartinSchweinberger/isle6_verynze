@@ -155,8 +155,7 @@ verywsc <- verywsc %>%
   dplyr::mutate(Age = factor(Age),
                 Type = factor(Type),
                 SemanticCategory = factor(SemanticCategory),
-                Ethnicity = factor(Ethnicity),
-                very = relevel(very, ref = "very"))
+                Ethnicity = factor(Ethnicity))
 # inspect
 table(verywsc$SemanticCategory)
 table(verywsc$Age)
@@ -1256,7 +1255,7 @@ head(rndmadjtb)
 ```{r isle6_3_58, message=F, warning=F}
 ggplot(rndmadjtb, aes(Adjective, Intercept)) +
   geom_point(aes(reorder(Adjective, -Intercept, fun = Intercept), y=Intercept)) +
-  coord_cartesian(ylim = c(-1.5, 1.5)) +
+  coord_cartesian(ylim = c(-4, 4)) +
   theme_set(theme_bw(base_size = 15)) +
   theme(legend.position="none", 
         axis.text.x = element_text(size=15, angle=90),
@@ -1271,10 +1270,10 @@ ggplot(rndmadjtb, aes(Adjective, Intercept)) +
 
 ```{r isle6_3_60, message=F, warning=F}
 rndmadjtb %>%
-  dplyr::filter(Intercept > .8 | Intercept < -.8) %>%
+  dplyr::filter(Intercept > 2 | Intercept < -2) %>%
   ggplot(aes(Adjective, Intercept)) +
   geom_point(aes(reorder(Adjective, -Intercept, fun = Intercept), y=Intercept)) +
-  coord_cartesian(ylim = c(-2, 2)) +
+  coord_cartesian(ylim = c(-4, 4)) +
   theme_set(theme_bw(base_size = 15)) +
   theme(legend.position="none", 
         axis.text.x = element_text(size=15, angle=90),
