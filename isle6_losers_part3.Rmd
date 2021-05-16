@@ -1206,21 +1206,6 @@ sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Type")) +
          width = 7.5, height = 13, units = c("cm"),  dpi = 600)
 ```
 
-```{r isle6_3_55, message=F, warning=F}
-sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Emotionality")) +
-  theme_bw() +
-  theme(legend.position = "top",
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), 
-        axis.line = element_line(colour = "black")) +
-  scale_y_continuous(name = "Predicted Probabilty of VERY", 
-                     limits = c(0, 1),
-                     breaks = seq(0, 1, .20), 
-                     labels = seq(0, 1, .20)) +
-  labs(title = "") +
-  ggsave(file =  here::here("images", "Effect_Emotionality.png"), 
-         width = 10, height = 10, units = c("cm"),  dpi = 600)
-```
 
 ```{r isle6_3_57, message=F, warning=F}
 randomtb <- ranef(m58.glmer)
@@ -1238,6 +1223,7 @@ ggplot(rndmadjtb, aes(Adjective, Intercept)) +
   geom_point(aes(reorder(Adjective, -Intercept, fun = Intercept), y=Intercept)) +
   coord_cartesian(ylim = c(-4, 4)) +
   theme_set(theme_bw(base_size = 15)) +
+  theme_bw()+
   theme(legend.position="none", 
         axis.text.x = element_text(size=15, angle=90),
         panel.grid.major = element_blank(), 
@@ -1250,11 +1236,11 @@ ggplot(rndmadjtb, aes(Adjective, Intercept)) +
 
 ```{r isle6_3_60, message=F, warning=F}
 rndmadjtb %>%
-  dplyr::filter(Intercept > 2 | Intercept < -2) %>%
+  dplyr::filter(Intercept > .8 | Intercept < -.8) %>%
   ggplot(aes(Adjective, Intercept)) +
   geom_point(aes(reorder(Adjective, -Intercept, fun = Intercept), y=Intercept)) +
   coord_cartesian(ylim = c(-4, 4)) +
-  theme_set(theme_bw(base_size = 15)) +
+  theme_bw() +
   theme(legend.position="none", 
         axis.text.x = element_text(size=15, angle=90),
         panel.grid.major = element_blank(), 
