@@ -23,7 +23,7 @@ This document documents the analysis of the adjective amplifier *very* in New Ze
 
 We will now begin with the analysis. In a first step, the session is prepared by setting options and activating packages.
 
-```{r sprep, message=F, warning=F}
+```{r isle6_2_01, message=F, warning=F}
 # load packages
 library(tidyverse)
 library(tidyr)
@@ -39,7 +39,7 @@ str(ampwsc)
 
 # Extract examples
 
-```{r dp2_03, message=F, warning=F}
+```{r isle6_2_02, message=F, warning=F}
 exdata <- ampwsc %>%
   dplyr::select(PreContextLong, Token, PostContext, PreContext, Function, File, Speaker) %>%
   mutate(Example = paste(PreContextLong, Token, PostContext, sep = " ")) %>%
@@ -67,7 +67,7 @@ head(very_attributive); head(very_predicative)
 
 # Clean biodata
 
-```{r dp2_04, message=F, warning=F}
+```{r isle6_2_03, message=F, warning=F}
 #                  CLEAN DATA
 ampwsc <- ampwsc %>%
 #  dplyr::mutate(Type = dplyr::case_when(Type == "BroadcastMonologue" ~ "formal",
@@ -124,7 +124,7 @@ ampwsc <- ampwsc %>%
 table(ampwsc$Age); summary(ampwsc$AgeNumeric)
 ```
 
-```{r dp2_05, message=F, warning=F}
+```{r isle6_2_04, message=F, warning=F}
 # recode education
 University <- c("1.5 YRS UNIVERSITY", "1ST YEAR BA", "1ST YEAR BA/LLB", 
                 "2 YRS UNI", "2ND YEAR UNIVERSITY",  "3RD YEAR UNIVERSITY",  
@@ -183,28 +183,40 @@ ampwsc$Ethnicity <- ifelse(ampwsc$Ethnicity == "PAKEHA", "PAKEHA",
 ampwsc$L1 <- ifelse(ampwsc$L1 == "ENGLISH", "ENGLISH", 
                     ifelse(is.na(ampwsc$L1) == T, NA, "OTHER"))
 # inspect data
-summary(ampwsc)
+str(ampwsc)
 ```
 
 
-```{r dp2_06, message=F, warning=F}
+```{r isle6_2_05, message=F, warning=F}
 # inspect data
-str(ampwsc)
 ldtb <- ampwsc %>%
-  dplyr::select(Age, Adjective, Variant) %>%
-  dplyr::group_by(Age, Variant) %>%
-  dplyr::summarize(AdjectiveTypes = length(table(Adjective)), AllTypes = sum(table(Adjective))) %>%
-  dplyr::filter(Variant == "very") %>%
-  dplyr::mutate(LD = AdjectiveTypes/AllTypes)
+  dplyr::select(Age, Adjective, Variant, Function) %>%
+  dplyr::group_by(Age, Variant, Function) %>%
+  dplyr::summarize(AdjectiveTypes = length(table(Adjective)), 
+                   VariantN = n(),
+                   AllTypes = sum(table(Adjective))) %>%
+  dplyr::filter(Variant == "very"|Variant == "really"|Variant == "so"|Variant == "pretty") %>%
+  dplyr::mutate(LD = AdjectiveTypes/VariantN)
 # inspect
-head(ldtb)
+ldtb
+```
+
+
+
+```{r}
+ldtb %>%
+  ggplot(aes(x = Age, y = LD, group = Variant, color = Variant)) +
+  geom_line() + 
+  facet_grid(~Function) +
+  theme_bw() +
+  theme(legend.position = "top")
 ```
 
 # Visualization
 
 ## Figure 0{-}
 
-```{r dp2_07, message=F, warning=F}
+```{r isle6_2_06, message=F, warning=F}
 ampwsc %>%
   dplyr::select(Age, Function, Amplified) %>%
   dplyr::mutate_if(is.character, factor) %>%
@@ -225,7 +237,7 @@ ampwsc %>%
 ```
 
 
-```{r dp2_08, message=F, warning=F}
+```{r isle6_2_07, message=F, warning=F}
 ampwsc %>%
   dplyr::select(Age, Amplified, Variant) %>%
   dplyr::filter(Amplified != "0") %>%
@@ -270,7 +282,7 @@ ampwsc %>%
 ```
 
 
-```{r dp2_08, message=F, warning=F}
+```{r isle6_2_08, message=F, warning=F}
 ampwsc %>%
   dplyr::select(Age, Function, Amplified, Variant) %>%
   dplyr::filter(Amplified != "0") %>%
@@ -315,7 +327,7 @@ ampwsc %>%
          width = 15, height = 10, units = c("cm"),  dpi = 600)
 ```
 
-```{r dp2_10, message=F, warning=F}
+```{r isle6_2_09, message=F, warning=F}
 ampwsc %>%
   dplyr::select(Age, Function, Amplified, Variant) %>%
   dplyr::filter(Amplified != "0") %>%
@@ -360,7 +372,7 @@ ampwsc %>%
 
 
 
-```{r dp2_12, message=F, warning=F}
+```{r isle6_2_10, message=F, warning=F}
 wordcounts <- read.delim(here::here("data", "wordcount.txt"), sep = "\t", header = T, skipNul = T) %>%
   dplyr::filter(grepl("DPC", File) == T)
 p2d <- dplyr::left_join(wordcounts, ampwsc, by = c("File", "Speaker")) %>%
@@ -391,7 +403,7 @@ p2d <- dplyr::left_join(wordcounts, ampwsc, by = c("File", "Speaker")) %>%
 head(p2d)
 ```
 
-```{r dp2_13, message=F, warning=F}
+```{r isle6_2_11, message=F, warning=F}
 p2d %>%
   ggplot(aes(x = reorder(Age, desc(Age)), y = Frequency, group = Variant, 
              shape = Variant, color = Variant, linetype = Variant)) +
@@ -423,7 +435,7 @@ p2d %>%
 ```
 
 
-```{r dp2_15, message=F, warning=F}
+```{r isle6_2_12, message=F, warning=F}
 wordcounts <- read.delim(here::here("data", "wordcount.txt"), sep = "\t", header = T, skipNul = T) %>%
   dplyr::filter(grepl("DPC", File) == T)
 p3d <- dplyr::left_join(wordcounts, ampwsc, by = c("File", "Speaker")) %>%
@@ -453,7 +465,7 @@ head(p3d)
 ```
 
 
-```{r dp2_16, message=F, warning=F}
+```{r isle6_2_13, message=F, warning=F}
 p3d %>%
   ggplot(aes(x = reorder(Age, desc(Age)), y = Frequency, group = Variant, 
              shape = Variant, color = Variant, linetype = Variant)) +
@@ -485,7 +497,7 @@ p3d %>%
 ```
 
 
-```{r dp2_18, message=F, warning=F}
+```{r isle6_2_14, message=F, warning=F}
 # save data to disc
 write.table(ampwsc, here::here("data", "ampwsc.txt"), sep = "\t", 
             row.names = F, quote = F, eol="\n")
@@ -495,7 +507,7 @@ write.table(ampwsc, here::here("data", "ampwsc.txt"), sep = "\t",
 # Reduce data for stats
 
 
-```{r dp2_19, message=F, warning=F}
+```{r isle6_2_15, message=F, warning=F}
 # clean data
 ampwsc <- ampwsc %>%
   dplyr::select(-Token)  %>%
@@ -510,7 +522,7 @@ nrow(ampwsc); str(ampwsc)
 
 # Tables
 
-```{r dp2_20, message=F, warning=F}
+```{r isle6_2_16, message=F, warning=F}
 tb1dat <- ampwsc
 hfvars <- names(table(tb1dat$Variant))[which(table(tb1dat$Variant) > 10)]
 tb1dat <- tb1dat %>%
@@ -532,7 +544,7 @@ tb1
 ```
 
 
-```{r dp2_21, message=F, warning=F}
+```{r isle6_2_17, message=F, warning=F}
 # save data to disc
 write.table(tb1, here::here("data", "Table1.txt"), sep = "\t", row.names = F)
 # WARNING: remove all non amplified rows
@@ -541,7 +553,7 @@ tb2dat <- tb1dat %>%
 ```
 
 
-```{r dp2_22, message=F, warning=F}
+```{r isle6_2_18, message=F, warning=F}
 # create table
 Table2 <- tb2dat %>%
   dplyr::select(Age, Gender, FileSpeaker, very)  %>%
@@ -557,14 +569,14 @@ Table2
 ```
 
 
-```{r dp2_23, message=F, warning=F}
+```{r isle6_2_19, message=F, warning=F}
 # save data to disc
 write.table(Table2, here::here("data", "Table2.txt"), sep = "\t",  row.names = F, quote = F, eol="\n")
 ```
 
 
 
-```{r dp2_24, message=F, warning=F}
+```{r isle6_2_20, message=F, warning=F}
 # save data to disc
 write.table(ampwsc, here::here("data", "ampwsc_regdat.txt"), 
             sep = "\t", row.names = F, quote = F, eol="\n")
@@ -588,7 +600,7 @@ Schweinberger, Martin. `r format(Sys.time(), '%Y')`. *On the waning of forms - a
 }
 ```
 
-```{r fin}
+```{r isle6_2_21, message=F, warning=F}
 sessionInfo()
 ```
 

@@ -23,7 +23,7 @@ This document documents the analysis of the adjective amplifier *very* in New Ze
 
 We will now begin with the analysis. In a first step, the session is prepared by setting options and activating packages.
 
-```{r sprep, message=F, warning=F}
+```{r isle6_1_01, message=F, warning=F}
 # load packages
 library(tidyverse)
 library(tidyr)
@@ -51,7 +51,7 @@ corpusfiles = list.files(path = wscpath, pattern = ".TXT", all.files = T,
 
 Load and process data
 
-```{r dp1_01, message=F, warning=F}
+```{r isle6_1_02, message=F, warning=F}
 # load and start processing corpus
 wsc <- sapply(corpusfiles, function(x) {
   x <- scan(x, what = "char", sep = "", quote = "", quiet = T, skipNul = T)
@@ -104,7 +104,7 @@ nrow(wscdf)
 
 Extract word counts
 
-```{r dp1_02, message=F, warning=F}
+```{r isle6_1_03, message=F, warning=F}
 # add wordcount
 wordcount <- wscdf %>%
   dplyr::mutate(WordCount = str_count(CleanText, " ")+1) %>%
@@ -116,7 +116,7 @@ wordcount <- wscdf %>%
 
 Save data to disc
 
-```{r dp1_03, message=F, warning=F}
+```{r isle6_1_04, message=F, warning=F}
 # save raw data to disc
 write.table(wordcount, here::here("data", "wordcount.txt"), sep = "\t", row.names = F, col.names = T)
 write.table(wscdf, here::here("data", "wscdf_raw.txt"), sep = "\t", row.names = F, col.names = T)
@@ -127,7 +127,7 @@ wscdf <- read.delim(here::here("data", "wscdf_raw.txt"), sep = "\t", header = T,
 
 Split data
 
-```{r dp1_04, message=F, warning=F}
+```{r isle6_1_05, message=F, warning=F}
 # split data into smaller chunks
 pos01 <- wscdf$CleanText[1:10000]
 pos02 <- wscdf$CleanText[10001:20000]
@@ -148,7 +148,7 @@ pos15 <- wscdf$CleanText[100001:nrow(wscdf)]
 
 Pos-tagging
 
-```{r dp1_05, eval = F, message=F, warning=F}
+```{r isle6_1_06, message=F, warning=F, eval = F}
 source("D:\\R/POStagObject.R") # for pos-tagging objects in R
 library(NLP)
 library(openNLP)
@@ -234,7 +234,7 @@ wscdf$TextPOS <- unlist(wscpos)
 
 Save data to disc
 
-```{r dp1_06, message=F, warning=F}
+```{r isle6_1_07, message=F, warning=F}
 # save data to disc
 #write.table(wscdf, here::here("data", "wscdf_postagged.txt"), sep = "\t", row.names = F, col.names = T)
 wscdf <- read.delim(here::here("data", "wscdf_postagged.txt"), sep = "\t", header = T, skipNul = T)
@@ -242,7 +242,7 @@ wscdf <- read.delim(here::here("data", "wscdf_postagged.txt"), sep = "\t", heade
 
 ## Concordancing{-}
 
-```{r dp1_07, message=F, warning=F}
+```{r isle6_1_08, message=F, warning=F}
 # extract number of adjs per line
 pstggd <- wscdf$TextPOS
 lpstggd <- strsplit(pstggd, " ")
@@ -279,7 +279,7 @@ head(wscadjdf)
 
 
 
-```{r dp1_08, message=F, warning=F}
+```{r isle6_1_09, message=F, warning=F}
 # save raw data to disc
 write.table(wscadjdf, here::here("data", "wscadjdf.txt"), sep = "\t", row.names = F, col.names = T)
 wscadjdf <- read.delim(here::here("data", "wscadjdf.txt"), sep = "\t", header = T, skipNul = T)
@@ -287,7 +287,7 @@ wscadjdf <- read.delim(here::here("data", "wscadjdf.txt"), sep = "\t", header = 
 
 ## Process sociodemographic data{-}
 
-```{r dp1_010, message=F, warning=F}
+```{r isle6_1_10, message=F, warning=F}
 # load files
 biowsc <- read.delim(biowscpath, sep = "\t", header = F, skipNul = T)
 guidewsc <- read.delim(bioguidewsc, sep = "\t", header = F, skipNul = T)
@@ -315,7 +315,7 @@ head(wscspeakerinformation)
 
 
 
-```{r dp1_010, message=F, warning=F}
+```{r isle6_1_11, message=F, warning=F}
 # add information about type
 wscspeakerinformation <- wscspeakerinformation %>%
   dplyr::mutate(Type = File) %>%
@@ -342,7 +342,7 @@ head(wscspeakerinformation); nrow(wscspeakerinformation)
 
 
 
-```{r dp1_12, message=F, warning=F}
+```{r isle6_1_12, message=F, warning=F}
 # save raw data to disc
 write.table(wscspeakerinformation, here::here("data", "wscspeakerinformation.txt"), sep = "\t", 
             row.names = F, col.names = T)
@@ -353,14 +353,14 @@ wscadjdf <- read.delim(here::here("data", "wscadjdf.txt"), sep = "\t", header = 
 
 ## Combine data with biodata{-}
 
-```{r dp1_13, message=F, warning=F}
+```{r isle6_1_13, message=F, warning=F}
 # join wscadjdf and wscspeakerinformation
 wsc <- join(wscadjdf, wscspeakerinformation, by = c("File", "Speaker"))
 ```
 
 ## Frequency{-}
 
-```{r dp1_14, message=F, warning=F}
+```{r isle6_1_14, message=F, warning=F}
 # code freq of adj type by date category
 frqadjtb <- table(wsc$Age, wsc$Adjective)
 relfreqadjtb <- round(prop.table(frqadjtb, margin = 1)*100, 5)
@@ -376,7 +376,7 @@ head(wscadjdf)
 
 Save data to disc
 
-```{r dp1_15, message=F, warning=F}
+```{r isle6_1_15, message=F, warning=F}
 # save raw data to disc
 write.table(wscadjdf, here::here("data", "wscadjdf_spk.txt"), sep = "\t", row.names = F, col.names = T)
 wscadjdf <- read.delim(here::here("data", "wscadjdf_spk.txt"), sep = "\t", header = T, skipNul = T)
@@ -386,7 +386,7 @@ wscadjdf <- read.delim(here::here("data", "wscadjdf_spk.txt"), sep = "\t", heade
 
 not included: *quite*, *too*, and *well*.
 
-```{r dp1_16, message=F, warning=F}
+```{r isle6_1_16, message=F, warning=F}
 # define amplifiers 
 amplifiers <- c("absolutely", "actually", "aggressively", "amazingly", "appallingly", "awful", 
                 "awfully", "badly", "bloody", "certainly", "clearly", "complete", "dead", "completely", 
@@ -406,7 +406,7 @@ amplifiers <- c("absolutely", "actually", "aggressively", "amazingly", "appallin
 
 ## Syntactic Function{-}
 
-```{r dp1_17, message=F, warning=F}
+```{r isle6_1_17, message=F, warning=F}
 # determine function
 Function1 <- wscadjdf$PostContext %>%
   stringr::str_trim(side = "both") %>%
@@ -450,7 +450,7 @@ nrow(wscadjdf); head(wscadjdf); table(wscadjdf$Variant)
 
 ## Code Priming{-}
 
-```{r dp1_20, message=F, warning=F}
+```{r isle6_1_18, message=F, warning=F}
 # code priming
 prim1 <- c(rep(0, 1), wscadjdf$Variant[1:length(wscadjdf$Variant)-1])
 prim2 <- c(rep(0, 2), wscadjdf$Variant[1:(length(wscadjdf$Variant)-2)])
@@ -476,9 +476,9 @@ nonpropadj <- c("only", "much", "many", "cheaper", "cheaperr", "bests", "larger"
 str(wscadjdf); head(wscadjdf); nrow(wscadjdf)
 ```
 
-## Remoive negated forms et al.{-}
+## Remove negated forms et al.{-}
 
-```{r dp1_22, message=F, warning=F}
+```{r isle6_1_19, message=F, warning=F}
 # find items to be removed
 supsidx <- unique(grep(paste(sups,collapse="|"), wscadjdf$PreContextLong, value=F))
 negsidx <- unique(grep(paste(negs,collapse="|"), wscadjdf$PreContextLong, value=F))
@@ -496,7 +496,7 @@ wscadjdf <- wscadjdf[!wscadjdf$Variant == "", ]
 
 
 
-```{r dp1_23, message=F, warning=F}
+```{r isle6_1_20, message=F, warning=F}
 # save raw data to disc
 write.table(wscadjdf, here::here("data", "wscadjdf_wo_neg.txt"), sep = "\t", row.names = F)
 wscadjdf <- read.delim(here::here("data", "wscadjdf_wo_neg.txt"), sep = "\t", header = T, skipNul = T)
@@ -508,7 +508,7 @@ Remove variants that were not intensified by at least 2 different amplifier vari
 
 > NOT EXECTUTED!
 
-```{r dp1_24, eval = F, message=F, warning=F}
+```{r isle6_1_21, message=F, warning=F, eval = F}
 nrow(wscadjdf)
 # remove items that were not intensified by a minimum of 2 intensifier variants
 pintadjtb <- table(wscadjdf$Adjective, wscadjdf$Variant)
@@ -524,14 +524,14 @@ nrow(wscadjdf)
 
 ## Remove misspelled forms {-}
 
-```{r dp1_26, eval = F, message=F, warning=F}
+```{r isle6_1_22, message=F, warning=F, eval = F}
 # inspect adjectives
 names(table(wscadjdf$Adjective))
 ```
 
-Remove words not in dictionary or consist only of 1 or 2 characters
+Remove words not in dictionary or words that consist only of 1 or 2 characters
 
-```{r dp1_27, message=F, warning=F}
+```{r isle6_1_23, message=F, warning=F}
 # correct spelling
 library(hunspell)
 wscadjdf <- wscadjdf %>%
@@ -545,14 +545,14 @@ head(wscadjdf)
 
 ## Remove strange forms{-}
 
-```{r dp1_29, eval = F, message=F, warning=F}
+```{r isle6_1_24, message=F, warning=F}
 # inspect adjectives
 names(table(wscadjdf$Adjective))
 ```
 
 Remove mistagged items
 
-```{r dp1_30, message=F, warning=F}
+```{r isle6_1_25, message=F, warning=F}
 library(udpipe)
 #model <- udpipe_download_model(language = "english")
 udmodel_english <- udpipe_load_model(file = here::here("english-ewt-ud-2.5-191206.udpipe"))
@@ -564,7 +564,7 @@ udpipe_adjectives <- udpipe_annotate(udmodel_english, wscadjdf$Adjective) %>%
 head(udpipe_adjectives)
 ```
 
-```{r dp1_31, message=F, warning=F}
+```{r isle6_1_26, message=F, warning=F}
 nrow(wscadjdf)
 wscadjdf <-wscadjdf %>%
   dplyr::filter(Adjective %in% udpipe_adjectives)
@@ -575,7 +575,7 @@ nrow(wscadjdf)
 Remove adjectives that were never amplified
 
 
-```{r dp1_32, message=F, warning=F}
+```{r isle6_1_27, message=F, warning=F}
 amp_adjs <- wscadjdf %>%
   dplyr::filter(Amplified == 1) %>%
   dplyr::pull(Adjective) %>%
@@ -584,7 +584,7 @@ amp_adjs <- wscadjdf %>%
 # inspect
 head(amp_adjs)
 ```
-```{r dp1_33, message=F, warning=F}
+```{r isle6_1_28, message=F, warning=F}
 nrow(wscadjdf)
 wscadjdf <- wscadjdf %>%
   dplyr::filter(Adjective %in% amp_adjs)
@@ -594,7 +594,7 @@ nrow(wscadjdf)
 
 Save data to disc
 
-```{r dp1_35, message=F, warning=F}
+```{r isle6_1_29, message=F, warning=F}
 # save raw data to disc
 write.table(wscadjdf, here::here("data", "wscadjdf_clean.txt"), sep = "\t", row.names = F)
 wscadjdf <- read.delim(here::here("data", "wscadjdf_clean.txt"), sep = "\t", header = T, skipNul = T)
@@ -602,7 +602,7 @@ wscadjdf <- read.delim(here::here("data", "wscadjdf_clean.txt"), sep = "\t", hea
 
 ## Gradability{-}
 
-```{r dp1_36, message=F, warning=F}
+```{r isle6_1_30, message=F, warning=F}
 # code gradability
 # load Gradability data (derived from COCA)
 gradability <- read.delim(here::here("data", "Gradability.txt"), sep = "\t", header = T, quote = "", skipNul = T)
@@ -635,7 +635,7 @@ Add semantic types [@tagliamonte2008intensifiers, @dixon1977adjectives]
 
 * other
 
-```{r dp1_37, message=F, warning=F}
+```{r isle6_1_31, message=F, warning=F}
 # load data
 code1 <- read.delim(here::here("data", "semcodecg1.txt"), sep = "\t", header = T, skipNul = T)
 code2 <- read.delim(here::here("data", "semcodedjm1.txt"), sep = "\t", header = T, skipNul = T)
@@ -668,7 +668,7 @@ colnames(semcode)[3:12] <- c("Dimension", "Difficulty", "PhysicalProperty", "Col
 ```
 
 
-```{r dp1_38, message=F, warning=F}
+```{r isle6_1_32, message=F, warning=F}
 # load package
 library(dplyr)
 AdjectiveSemantics <- semcode %>%
@@ -693,7 +693,7 @@ AdjectiveSemantics <- AdjectiveSemantics %>%
 summary(AdjectiveSemantics$Certainty)
 ```
 
-```{r dp1_39, message=F, warning=F}
+```{r isle6_1_33, message=F, warning=F}
 Age <- AdjectiveSemantics %>%
   dplyr::filter(Age != 0) %>%
   dplyr::pull(Adjective)
@@ -740,7 +740,7 @@ table(wscadjdf$SemanticCategory)
 
 ## Sentiment Analysis{-}
 
-```{r dp1_40, message=F, warning=F}
+```{r isle6_1_34, message=F, warning=F}
 # positive adjectives
 pos_adj <- tidytext::get_sentiments("nrc") %>%
   dplyr::filter(sentiment == "positive") %>%
@@ -761,7 +761,7 @@ head(wscadjdf)
 
 ## Correct errors{-}
 
-```{r isle6_1_59, message=F, warning=F}
+```{r isle6_1_35, message=F, warning=F}
 wscadjdf %>%
   dplyr::filter(Variant == "so") %>%
   dplyr::group_by(Variant, Function) %>%
@@ -769,29 +769,29 @@ wscadjdf %>%
 ```
 
 
-```{r isle6_1_60, message=F, warning=F}
+```{r isle6_1_36, message=F, warning=F}
 wscadjdf <- wscadjdf %>%
   dplyr::mutate(Function = ifelse(Variant == "so" & Function == "Attributive", "Predicative", Function))
 ```
 
-```{r isle6_1_61, message=F, warning=F}
+```{r isle6_1_37, message=F, warning=F}
 wscadjdf %>%
   dplyr::filter(Variant == "so") %>%
   dplyr::group_by(Variant, Function) %>%
   dplyr::summarize(Frequency = n())
 ```
 
-```{r intro41, echo = F, message=FALSE, warning=FALSE}
+```{r isle6_1_38, message=F, warning=F}
 # inspect data
 wscadjdf %>%
-  head(20) %>%
-  kable(caption = "First 20 rows of wscadjdf.") %>%
+  head(10) %>%
+  kable(caption = "First 10 rows of wscadjdf.") %>%
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
                             full_width = F)
 ```
 
 
-```{r dp1_44, message=F, warning=F}
+```{r isle6_1_39, message=F, warning=F}
 # save raw data to disc
 write.table(wscadjdf, here::here("data", "wsc_fullclean.txt"), sep = "\t", row.names = F, col.names = T)
 ```
@@ -813,7 +813,7 @@ Schweinberger, Martin. `r format(Sys.time(), '%Y')`. *On the waning of forms - a
 }
 ```
 
-```{r fin}
+```{r isle6_1_40, message=F, warning=F}
 sessionInfo()
 ```
 
