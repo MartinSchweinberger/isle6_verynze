@@ -65,13 +65,13 @@ summary(verywsc$Frequency)
 
 We plot the scaled variable (Frequency).
 
-```{r isle6_3_05, message=F, warning=F}
+```{r isle6_3_04, message=F, warning=F}
 plot(verywsc$Frequency)
 ```
 
 We also scale gradability and plot the resulting scaled gradability.
 
-```{r isle6_3_07, message=F, warning=F}
+```{r isle6_3_05, message=F, warning=F}
 # gradability
 verywsc <- verywsc %>%
   dplyr::mutate(Gradability  = scale(Gradability-1)) %>%
@@ -84,7 +84,7 @@ plot(verywsc$Gradability)
 
 # CIT
 
-```{r isle6_3_08, message=F, warning=F}
+```{r isle6_3_06, message=F, warning=F}
 # load packages
 library(partykit)
 library(tidyverse)
@@ -100,13 +100,13 @@ citd.ctree <- partykit::ctree(very ~ Age +  SemanticCategory + Frequency +  Prim
 plot(citd.ctree, gp = gpar(fontsize = 8)) # plot final ctree
 ```
 
-```{r isle6_3_09, message=F, warning=F}
+```{r isle6_3_07, message=F, warning=F}
 citd.ctree
 ```
 
 According to the CIT, we can simplify Semantic Category, Type, and Age. However, we will only collapse categories that are conceptually related (collapse Speed, Position, and Dimension as well as Physical Property and Color) 
 
-```{r isle6_3_10, message=F, warning=F}
+```{r isle6_3_08, message=F, warning=F}
 verywsc <- verywsc %>%
   # simplify age
   dplyr::mutate(Age = as.character(Age)) %>%
@@ -161,7 +161,7 @@ table(verywsc$Type)
 table(verywsc$Ethnicity)
 ```
 
-```{r isle6_3_08, message=F, warning=F}
+```{r isle6_3_09, message=F, warning=F}
 # create data
 citdata <- verywsc
 # set seed
@@ -174,7 +174,7 @@ citd.ctree <- partykit::ctree(very ~ Age +  SemanticCategory + Frequency +  Prim
 plot(citd.ctree, gp = gpar(fontsize = 8)) # plot final ctree
 ```
 
-```{r}
+```{r isle6_3_10, message=F, warning=F}
 # activate package
 library(ggparty)
 # extract p-values
@@ -340,6 +340,8 @@ aic.glmer; aic.glm
 The AIC of the glmer object is substantially smaller which indicates that including the random intercepts appears to be justified. 
 
 ## Model fitting{-}
+
+### Main Effects {-}
 
 #### Age {-}
 
@@ -541,7 +543,7 @@ intac <- t(combn(vars, 2))
 intac
 ```
 
-#### Check interactions
+### Check interactions {-}
 
 ```{r isle6_3_m12}
 ifelse(min(ftable(verywsc$Age, verywsc$SemanticCategory, verywsc$very)) == 0, "not possible", "possible")
@@ -797,7 +799,7 @@ max(car::vif(m40.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m41}
+```{r isle6_3_m41a}
 ifelse(min(ftable(verywsc$Priming, verywsc$Gender, verywsc$very)) == 0, "not possible", "possible") 
 m41.glmer <-  update(m33.glmer, .~.+ Priming * Gender)
 max(car::vif(m41.glmer)[,1])
@@ -805,7 +807,7 @@ anova(m41.glmer, m33.glmer, test = "Chi")
 Anova(m41.glmer, type = "III", test = "Chi") 
 ```
 
-```{r isle6_3_m41}
+```{r isle6_3_m41b}
 m41.glmer <-  update(m33.glmer, .~. -Type:Frequency)
 max(car::vif(m41.glmer)[,1])
 anova(m41.glmer, m33.glmer, test = "Chi")
@@ -988,7 +990,7 @@ pm64_results
 
 ## Diagnostics{-}
 
-```{r isle6_3_41, message=F, warning=F}
+```{r isle6_3_42, message=F, warning=F}
 plot(m58.glmer, col = "black", pch = 20); par(mfrow = c(1, 1))
 ```
 
@@ -996,7 +998,7 @@ plot(m58.glmer, col = "black", pch = 20); par(mfrow = c(1, 1))
 
 In a next step, we create a summary of the model fitting process.
 
-```{r isle6_3_46,  message=F, warning=F}
+```{r isle6_3_43,  message=F, warning=F}
 # use customized model comparison function
 # create compariveryns
 m1m0 <- anova(m0.glmer, m1.glmer, test = "Chi")
@@ -1039,12 +1041,12 @@ mdl.cmp.glmersc.swsu.dm
 
 # Model summary
 
-```{r isle6_3_glm}
+```{r isle6_44_glm}
 m58.glm <-  glm(very ~ Age + Priming + Emotionality + Type + Gender + Education + Age:Priming + Gender:Education, 
                 family = "binomial", data = verywsc)
 ```
 
-```{r isle6_3_42, message=F, warning=F}
+```{r isle6_3_45, message=F, warning=F}
 # load function for regression table summary
 source("D:\\R/meblr.summary.R")
 # set up summary table
@@ -1057,7 +1059,7 @@ meblrm_ampwsc
 
 We also check the Anova summary to see if predictors, rather than individual predictor levels, are significant and to what extent.
 
-```{r isle6_3_43, message=F, warning=F}
+```{r isle6_3_46, message=F, warning=F}
 # load function
 library(car)
 meblrm_ampwsc_Anova <- Anova(m58.glmer, type = "III", test = "Chi")
@@ -1069,7 +1071,7 @@ meblrm_ampwsc_Anova
 
 Visualize effects
 
-```{r isle6_3_44, message=F, warning=F}
+```{r isle6_3_47, message=F, warning=F}
 sjPlot::plot_model(m58.glmer) +
   theme_bw() + 
   geom_hline(yintercept = 1, linetype = "dotted") +
@@ -1082,7 +1084,7 @@ sjPlot::plot_model(m58.glmer) +
          width = 20, height = 10, units = c("cm"),  dpi = 600)
 ```
 
-```{r isle6_3_45g, message=F, warning=F}
+```{r isle6_3_48, message=F, warning=F}
 sjPlot::tab_model(m0.glmer, m1.glmer, m58.glmer,
                   dv.labels = c("Intercept-only Model", "Age-only Model", "Final Minimal Model"),
                   p.style = "stars", collapse.ci = TRUE)
@@ -1090,7 +1092,7 @@ sjPlot::tab_model(m0.glmer, m1.glmer, m58.glmer,
 
 ## C and Somers D{-}
 
-```{r}
+```{r isle6_3_49, message=F, warning=F}
 pred_m0 <- ifelse(fitted(m0.glmer) >= .5, 1, 0)
 pred_m1 <- ifelse(fitted(m1.glmer) >= .5, 1, 0)
 pred_mf <- ifelse(fitted(m58.glmer) >= .5, 1, 0)
@@ -1102,7 +1104,7 @@ somers2(obs, pred_mf)
 
 Inspect probabilities
 
-```{r}
+```{r isle6_3_50, message=F, warning=F}
 feffects <- names(fixef(m58.glmer))
 loggedodds <- c(fixef(m58.glmer)[1],
           fixef(m58.glmer)[1] + fixef(m58.glmer)[2:length(fixef(m58.glmer))])
@@ -1115,20 +1117,20 @@ ptb
 
 Age
 
-```{r isle6_3_48, message=F, warning=F}
+```{r isle6_3_51, message=F, warning=F}
 library (multcomp)
 summary(glht(m58.glmer, mcp(Age="Tukey")))
 ```
 
 Type
 
-```{r isle6_3_49, message=F, warning=F}
+```{r isle6_3_52, message=F, warning=F}
 summary(glht(m58.glmer, mcp(Type="Tukey")))
 ```
 
 ## Check accuracy{-}
 
-```{r isle6_3_50, message=F, warning=F}
+```{r isle6_3_53, message=F, warning=F}
 # predict probs of nativelike for effects
 verywsc$PredictedFrequency <- predict(m58.glmer, verywsc, type="response")
 # create response variable
@@ -1140,7 +1142,7 @@ library(caret)
 confusionMatrix(as.factor(verywsc$PredictedResponse), as.factor(verywsc$very))
 ```
 
-```{r isle6_3_50, message=F, warning=F}
+```{r isle6_3_54, message=F, warning=F}
 # predict probs of nativelike for effects
 verywsc$PredictedFrequency <- predict(m1.glmer, verywsc, type="response")
 # create response variable
@@ -1154,7 +1156,7 @@ confusionMatrix(as.factor(verywsc$PredictedResponse), as.factor(verywsc$very))
 
 ## Visualize effects{.}
 
-```{r isle6_3_54, message=F, warning=F}
+```{r isle6_3_55, message=F, warning=F}
 sjPlot::plot_model(m58.glmer, type = "pred", 
                    terms = c("Gender", "Education")) +
   theme_bw() +
@@ -1172,7 +1174,7 @@ sjPlot::plot_model(m58.glmer, type = "pred",
          width = 7.5, height = 15, units = c("cm"),  dpi = 600)
 ```
 
-```{r isle6_3_53, message=F, warning=F}
+```{r isle6_3_56, message=F, warning=F}
 sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Age", "Priming")) +
   theme_bw() +
   theme(legend.position = "top",
@@ -1189,7 +1191,7 @@ sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Age", "Priming")) +
          width = 7.5, height = 15, units = c("cm"),  dpi = 600)
 ```
 
-```{r isle6_3_55, message=F, warning=F}
+```{r isle6_3_57, message=F, warning=F}
 sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Type")) +
   theme_bw() +
   theme(legend.position = "top",
@@ -1207,7 +1209,7 @@ sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Type")) +
 ```
 
 
-```{r isle6_3_57, message=F, warning=F}
+```{r isle6_3_58, message=F, warning=F}
 randomtb <- ranef(m58.glmer)
 rndmadj <- as.vector(unlist(randomtb$`Adjective`))
 adj <- as.vector(unlist(rownames(randomtb$`Adjective`)))
@@ -1218,7 +1220,7 @@ rndmadjtb <- rndmadjtb[order(rndmadjtb$Intercept, decreasing = T),]
 head(rndmadjtb)
 ```
 
-```{r isle6_3_58, message=F, warning=F}
+```{r isle6_3_59, message=F, warning=F}
 ggplot(rndmadjtb, aes(Adjective, Intercept)) +
   geom_point(aes(reorder(Adjective, -Intercept, fun = Intercept), y=Intercept)) +
   coord_cartesian(ylim = c(-4, 4)) +

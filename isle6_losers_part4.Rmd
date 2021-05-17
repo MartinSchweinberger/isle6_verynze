@@ -22,7 +22,7 @@ This document documents the analysis of the adjective amplifier *really* in New 
 
 We will now begin with the analysis. In a first step, the session is prepared by setting options and activating packages.
 
-```{r isle6_3_01, message=F, warning=F}
+```{r isle6_4_01, message=F, warning=F}
 # load packages
 library(tidyverse)
 library(tidyr)
@@ -34,7 +34,7 @@ options(max.print=10000)
 
 We proceed by loading the data, factorizing variables that are so far represented as character strings instead of factors, and inspecting its characteristics.
 
-```{r isle6_3_02, message=F, warning=F}
+```{r isle6_4_02, message=F, warning=F}
 # load data
 reallywsc <- read.delim(here::here("data", "ampwsc_regdat.txt"), sep = "\t", header = T, skipNul = T)
 # remove superfluous variables
@@ -56,7 +56,7 @@ nrow(reallywsc); str(reallywsc); head(reallywsc); summary (reallywsc)
 
 We will now scale numeric variables so that the estimates refer to the mean of the numeric variables rather than their true 0-point. This is necessary as estimates for adjectives that occur with a frequency of 0 are nonsensical.
 
-```{r isle6_3_03, message=F, warning=F}
+```{r isle6_4_03, message=F, warning=F}
 # frequency
 summary(reallywsc$Frequency)
 reallywsc <- reallywsc %>%
@@ -68,13 +68,13 @@ summary(reallywsc$Frequency)
 
 We plot the scaled variable (Frequency).
 
-```{r isle6_3_05, message=F, warning=F}
+```{r isle6_4_05, message=F, warning=F}
 plot(reallywsc$Frequency)
 ```
 
 We also scale gradability and plot the resulting scaled gradability.
 
-```{r isle6_3_07, message=F, warning=F}
+```{r isle6_4_07, message=F, warning=F}
 # gradability
 reallywsc <- reallywsc %>%
   dplyr::mutate(Gradability  = scale(Gradability-1)) %>%
@@ -87,7 +87,7 @@ plot(reallywsc$Gradability)
 
 # CIT
 
-```{r isle6_3_08, message=F, warning=F}
+```{r isle6_4_08, message=F, warning=F}
 # load packages
 library(partykit)
 library(tidyverse)
@@ -103,13 +103,13 @@ citd.ctree <- partykit::ctree(really ~ Age +  SemanticCategory + Frequency +  Pr
 plot(citd.ctree, gp = gpar(fontsize = 8)) # plot final ctree
 ```
 
-```{r isle6_3_09, message=F, warning=F}
+```{r isle6_4_09, message=F, warning=F}
 citd.ctree
 ```
 
 According to the CIT, we can simplify Semantic Category, Type, and Age. However, we will only collapse categories that are conceptually related (collapse Speed, Position, and Dimension as well as Physical Property and Color) 
 
-```{r isle6_3_10, message=F, warning=F}
+```{r isle6_4_10, message=F, warning=F}
 reallywsc <- reallywsc %>%
   # simplify age
   dplyr::mutate(Age = as.character(Age)) %>%
@@ -164,7 +164,7 @@ table(reallywsc$Type)
 table(reallywsc$Ethnicity)
 ```
 
-```{r isle6_3_08, message=F, warning=F}
+```{r isle6_4_11, message=F, warning=F}
 # create data
 citdata <- reallywsc
 # set seed
@@ -177,7 +177,7 @@ citd.ctree <- partykit::ctree(really ~ Age +  SemanticCategory + Frequency +  Pr
 plot(citd.ctree, gp = gpar(fontsize = 8)) # plot final ctree
 ```
 
-```{r}
+```{r isle6_4_12, message=F, warning=F}
 # activate package
 library(ggparty)
 # extract p-values
@@ -216,7 +216,7 @@ ggparty(citd.ctree) +
 
 We now begin with the modeling. In a first step, we use a Boruta analysis as a variable selection procedure to determine which variables have any sort of meaningful relationship with the dependent variable. We will only consider variables which have been deemed as being important during the model fitting process.
 
-```{r isle6_3_11, message=F, warning=F}
+```{r isle6_4_13, message=F, warning=F}
 # load library
 library(Boruta)
 # create data for boruta
@@ -235,7 +235,7 @@ As Function is deemed unimportant, we remove it from the analysis and rerun the 
 
 We now begin with the modelling. In a first step, we use a Boruta analysis as a variable selection procedure to determine which variables have any sort of meaningful relationship with the dependent variable.
 
-```{r isle6_3_12, message=F, warning=F}
+```{r isle6_4_14, message=F, warning=F}
 rejected <- names(boruta1$finalDecision)[which(boruta1$finalDecision == "Rejected")]
 # update data for boruta
 borutadata <- borutadata %>%
@@ -248,7 +248,7 @@ print(boruta2)
 
 We also remove Education as it is deemed only tentatively important and start a 3^rd^ run.
 
-```{r isle6_3_13, message=F, warning=F}
+```{r isle6_4_15, message=F, warning=F}
 rejected <- names(boruta1$finalDecision)[which(boruta1$finalDecision == "Tentative")]
 # update data for boruta
 borutadata <- borutadata %>%
@@ -261,19 +261,19 @@ print(boruta3)
 
 No more variables need to be removed. We now inspect the visualizations of the Boruta analysis. 
 
-```{r isle6_3_14, message=F, warning=F}
+```{r isle6_4_16, message=F, warning=F}
 plot(boruta3)
 ```
 
 In addition, we inspect the history of the Boruta runs. 
 
-```{r isle6_3_15, message=F, warning=F}
+```{r isle6_4_17, message=F, warning=F}
 plotImpHistory(boruta3)
 ```
 
 Now, we create the final publication visualization of the Boruta analysis. 
 
-```{r isle6_3_16, message=F, warning=F}
+```{r isle6_4_18, message=F, warning=F}
 borutadf <- as.data.frame(boruta3$ImpHistory) %>%
   gather(Variable, Importance, Adjective:shadowMin) %>%
   mutate(Type = ifelse(str_detect(Variable, "shadow"), "Control", "Predictor")) %>%
@@ -309,7 +309,7 @@ Potentially relevant predictors are:
 
 We begin with the model fitting by setting options and creating intercept-only base-line models. 
 
-```{r isle6_3_17, message=F, warning=F}
+```{r isle6_4_19, message=F, warning=F}
 # load library
 library(rms)
 # set options
@@ -324,7 +324,7 @@ summary(m0.glm)
 
 In a next step, we create analogous base-line models with Adjective as a random effect (random intercepts). 
 
-```{r isle6_3_18, message=F, warning=F}
+```{r isle6_4_20, message=F, warning=F}
 # load packages
 library(lme4)
 library(car)
@@ -334,7 +334,7 @@ m0.glmer = glmer(really ~ (1|Adjective), data = reallywsc, family = binomial)
 
 We can now use the AIC to determine if including a random effect structure is justified. 
 
-```{r isle6_3_19, message=F, warning=F}
+```{r isle6_4_21, message=F, warning=F}
 aic.glmer <- AIC(logLik(m0.glmer))
 aic.glm <- AIC(logLik(m0.glm))
 aic.glmer; aic.glm
@@ -344,9 +344,11 @@ The AIC of the glmer object is substantially smaller which indicates that includ
 
 ## Model fitting{-}
 
+### Main Effects{-}
+
 #### Age {-}
 
-```{r isle6_3_20}
+```{r isle6_4_22}
 #	manual modelfitting
 m0.glmer <- glmer(really ~ 1 + (1|Adjective), family = binomial, data = reallywsc, 
                   control=glmerControl(optimizer="bobyqa"))
@@ -359,7 +361,7 @@ Anova(m1.glmer, type = "III", test = "Chi")
 
 Probability of really among speakers aged 40+
 
-```{r isle6_3_21}
+```{r isle6_4_23}
 round(plogis(fixef(m1.glmer)[1] + fixef(m1.glmer)[3])*100, 2)
 ```
 
@@ -367,7 +369,7 @@ We will now check if the sample size is sufficient to detect a medium-sized effe
 
 In order to check what a medium-sized effect is, we need to determine the odds ratios of the fixed effects and then convert them into Cohen's d values for which we have associations between traditional denominations (small, medium, and large) and effect sife values. According to @chen2010big odds ratios of 1.68, 3.47, and 6.71 are equivalent to Cohen's d = 0.2 (small), 0.5 (medium), and 0.8 (large).
 
-```{r isle6_3_22, message=F, warning=F}
+```{r isle6_4_24, message=F, warning=F}
 pm1 <- m1.glmer
 estimatesfixedeffects <- fixef(pm1)
 exp(estimatesfixedeffects)
@@ -375,7 +377,7 @@ exp(estimatesfixedeffects)
 
 We will now change the size of the effect of Age40+ to make it "medium-sized", i.e. on the brink of being noise but being just strong enough to be considered small. In other words, we will set the effect so that its odds ratio is exactly 3.47.
 
-```{r isle6_3_23, message=F, warning=F, eval = F}
+```{r isle6_4_25, message=F, warning=F, eval = F}
 fixef(pm1)["Age40+"] <- 1.244
 estimatesfixedeffects <- fixef(pm1)
 exp(estimatesfixedeffects)
@@ -384,14 +386,14 @@ simr::powerSim(pm1, fixed("Age", "lr"), nsim=100)
 
 #### Frequency {-}
 
-```{r isle6_3_24}
+```{r isle6_4_26}
 # add Frequency
 m2.glmer <- update(m1.glmer, .~.+ Frequency)
 car::vif(m2.glmer)
 anova(m2.glmer, m1.glmer, test = "Chi") 
 ```
 
-```{r isle6_3_25, eval = F}
+```{r isle6_4_27, eval = F}
 pm2 <- m2.glmer
 fixef(pm2)["Frequency"] <- 1.244
 estimatesfixedeffects <- fixef(pm2)
@@ -400,7 +402,7 @@ simr::powerSim(pm2, fixed("Frequency", "lr"), nsim=100)
 
 #### Priming{-}
 
-```{r isle6_3_26}
+```{r isle6_4_28}
 ifelse(min(ftable(reallywsc$Priming, reallywsc$really)) == 0, "not possible", "possible")
 m3.glmer <- update(m1.glmer, .~.+Priming)
 car::vif(m3.glmer)
@@ -410,7 +412,7 @@ Anova(m3.glmer, type = "III", test = "Chi")
 
 z-test because the predictor is nnot categorical
 
-```{r isle6_3_27, eval = F}
+```{r isle6_4_29, eval = F}
 pm3 <- m3.glmer
 fixef(pm3)["PrimingPrime"] <- 1.244
 estimatesfixedeffects <- fixef(pm3)
@@ -420,7 +422,7 @@ pm3_results
 
 #### Emotionality{-}
 
-```{r isle6_3_28}
+```{r isle6_4_30}
 ifelse(min(ftable(reallywsc$Emotionality, reallywsc$really)) == 0, "not possible", "possible")
 m4.glmer <- update(m3.glmer, .~.+Emotionality)
 car::vif(m4.glmer)
@@ -428,7 +430,7 @@ anova(m4.glmer, m3.glmer, test = "Chi")
 Anova(m4.glmer, type = "III", test = "Chi")        
 ```
 
-```{r isle6_3_29, eval = F}
+```{r isle6_4_31, eval = F}
 pm4 <- m4.glmer
 fixef(pm4)["EmotionalityPositive"] <- 1.244 # positive because it has fewer observations
 estimatesfixedeffects <- fixef(pm4)
@@ -438,7 +440,7 @@ pm3_results
 
 #### Type{-}
 
-```{r isle6_3_30}
+```{r isle6_4_32}
 ifelse(min(ftable(reallywsc$Type, reallywsc$really)) == 0, "not possible", "possible")
 m5.glmer <- update(m3.glmer, .~.+Type)
 car::vif(m5.glmer)
@@ -446,7 +448,7 @@ anova(m5.glmer, m3.glmer, test = "Chi")
 Anova(m5.glmer, type = "III", test = "Chi")   
 ```
 
-```{r isle6_3_31, eval = F}
+```{r isle6_4_33, eval = F}
 pm5 <- m5.glmer
 fixef(pm5)["TypePublicConversation"] <- 1.244 # PublicConversation because it has fewer observations
 estimatesfixedeffects <- fixef(pm5)
@@ -456,7 +458,7 @@ pm5_results
 
 #### Gender{-}
 
-```{r isle6_3_32}
+```{r isle6_4_34}
 ifelse(min(ftable(reallywsc$Gender, reallywsc$really)) == 0, "not possible", "possible")
 m6.glmer <- update(m5.glmer, .~.+Gender)
 car::vif(m6.glmer)
@@ -464,7 +466,7 @@ anova(m6.glmer, m5.glmer, test = "Chi")
 Anova(m6.glmer, type = "III", test = "Chi")        
 ```
 
-```{r isle6_3_33, eval = F}
+```{r isle6_4_35, eval = F}
 pm6 <- m6.glmer
 fixef(pm6)["GenderWoman"] <- 1.244 
 estimatesfixedeffects <- fixef(pm6)
@@ -474,14 +476,14 @@ pm6_results
 
 #### Semantic Category{-}
 
-```{r isle6_3_34}
+```{r isle6_4_36}
 m7.glmer <- update(m6.glmer, .~.+ SemanticCategory)
 car::vif(m7.glmer)
 anova(m7.glmer, m6.glmer, test = "Chi") 
 Anova(m7.glmer, type = "III", test = "Chi")
 ```
 
-```{r isle6_3_35, eval = F}
+```{r isle6_4_37, eval = F}
 pm7 <- m7.glmer
 fixef(pm7)["SemanticCategoryPhysicalProperty"] <- 1.244 # PhysicalProperty because it has fewer observations
 estimatesfixedeffects <- fixef(pm7)
@@ -491,7 +493,7 @@ pm7_results
 
 #### Ethnicity{-}
 
-```{r isle6_3_36}
+```{r isle6_4_38}
 ifelse(min(ftable(reallywsc$Ethnicity, reallywsc$really)) == 0, "not possible", "possible")
 m8.glmer <- update(m7.glmer, .~.+Ethnicity)
 car::vif(m8.glmer)
@@ -500,7 +502,7 @@ anova(m8.glmer, m7.glmer, test = "Chi")
 
 #### Education{-}
 
-```{r isle6_3_37}
+```{r isle6_4_39}
 ifelse(min(ftable(reallywsc$Education, reallywsc$really)) == 0, "not possible", "possible")
 m9.glmer <- update(m7.glmer, .~.+Education)
 car::vif(m9.glmer)
@@ -508,7 +510,7 @@ anova(m9.glmer, m7.glmer, test = "Chi")
 Anova(m9.glmer, type = "III", test = "Chi")
 ```
 
-```{r isle6_38, eval = F}
+```{r isle6_40, eval = F}
 pm9 <- m9.glmer
 fixef(pm9)["EducationUniversity"] <- 1.244 
 estimatesfixedeffects <- fixef(pm9)
@@ -518,14 +520,14 @@ pm9_results
 
 #### Gradability{-}
 
-```{r isle6_3_39}
+```{r isle6_4_41}
 m10.glmer <- update(m7.glmer, .~.+Gradability)
 car::vif(m10.glmer)
 anova(m10.glmer, m7.glmer, test = "Chi")   
 Anova(m10.glmer, type = "III", test = "Chi") 
 ```
 
-```{r isle6_3_40, eval = F}
+```{r isle6_4_42, eval = F}
 pm10 <- m10.glmer
 fixef(pm10)["Gradability"] <- 1.244
 estimatesfixedeffects <- fixef(pm10)
@@ -535,7 +537,7 @@ pm10_results
 
 ## Interactions{-}
 
-```{r isle6_3_41, message=F, warning=F}
+```{r isle6_4_43, message=F, warning=F}
 # find all 2-way interactions
 library(utils)
 #colnames(reallywsc) # remove # to activate
@@ -546,22 +548,22 @@ intac <- t(combn(vars, 2))
 intac
 ```
 
-#### Check interactions
+### Check interactions {-}
 
-```{r isle6_3_m12}
+```{r isle6_4_m12}
 ifelse(min(ftable(reallywsc$Age, reallywsc$SemanticCategory, reallywsc$really)) == 0, "not possible", "possible")
 m12.glmer <-  update(m7.glmer, .~.+ Age * SemanticCategory)
 max(car::vif(m12.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m13}
+```{r isle6_4_m13}
 m13.glmer <-  update(m7.glmer, .~.+ Age * Frequency)
 max(car::vif(m13.glmer)[,1])
 anova(m13.glmer, m7.glmer, test = "Chi") 
 ```
 
-```{r isle6_3_m13p, eval = F}
+```{r isle6_4_m13p, eval = F}
 pm13 <- m13.glmer
 fixef(pm13)["Age40+:Frequency"] <- 1.244 
 estimatesfixedeffects <- fixef(pm13)
@@ -569,7 +571,7 @@ pm13_results <- simr::powerSim(pm13, fixed("Age40+:Frequency", "z"), nsim=100)
 pm13_results
 ```
 
-```{r isle6_3_m14a}
+```{r isle6_4_m14a}
 ifelse(min(ftable(reallywsc$Age, reallywsc$Priming, reallywsc$really)) == 0, "not possible", "possible") 
 m14.glmer <-  update(m7.glmer, .~.+ Age * Priming)
 max(car::vif(m14.glmer)[,1])
@@ -577,7 +579,7 @@ anova(m14.glmer, m7.glmer, test = "Chi")
 Anova(m14.glmer, type = "III", test = "Chi") 
 ```
 
-```{r isle6_3_m14p, eval = F}
+```{r isle6_4_m14p, eval = F}
 pm14 <- m14.glmer
 fixef(pm14)["Age40+:PrimingPrime"] <- 1.244 
 estimatesfixedeffects <- fixef(pm14)
@@ -585,48 +587,48 @@ pm14_results <- simr::powerSim(pm14, fixed("Age40+:PrimingPrime", "z"), nsim=100
 pm14_results
 ```
 
-```{r isle6_3_m15}
+```{r isle6_4_m15}
 ifelse(min(ftable(reallywsc$Age, reallywsc$Emotionality, reallywsc$really)) == 0, "not possible", "possible") 
 m15.glmer <-  update(m14.glmer, .~.+ Age * Emotionality)
 max(car::vif(m15.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m16}
+```{r isle6_4_m16}
 ifelse(min(ftable(reallywsc$Age, reallywsc$Type, reallywsc$really)) == 0, "not possible", "possible") 
 m16.glmer <-  update(m14.glmer, .~.+ Age * Type)
 max(car::vif(m16.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m17}
+```{r isle6_4_m17}
 ifelse(min(ftable(reallywsc$Age, reallywsc$Gender, reallywsc$really)) == 0, "not possible", "possible") 
 m17.glmer <-  update(m14.glmer, .~.+ Age * Gender)
 max(car::vif(m17.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m18}
+```{r isle6_4_m18}
 ifelse(min(ftable(reallywsc$Age, reallywsc$Ethnicity, reallywsc$really)) == 0, "not possible", "possible") 
 m18.glmer <-  update(m14.glmer, .~.+ Age * Ethnicity)
 max(car::vif(m18.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m19}
+```{r isle6_4_m19}
 ifelse(min(ftable(reallywsc$Age, reallywsc$Education, reallywsc$really)) == 0, "not possible", "possible")
 m19.glmer <-  update(m14.glmer, .~.+ Age * Education)
 max(car::vif(m19.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m20}
+```{r isle6_4_m20}
 m20.glmer <-  update(m14.glmer, .~.+ Age * Gradability)
 max(car::vif(m20.glmer)[,1])
 anova(m20.glmer, m14.glmer, test = "Chi") 
 ```
 
-```{r isle6_3_m20p, eval = F}
+```{r isle6_4_m20p, eval = F}
 pm20 <- m20.glmer
 fixef(pm20)["Age40+:Gradability"] <- 1.244 
 estimatesfixedeffects <- fixef(pm20)
@@ -634,64 +636,64 @@ pm20_results <- simr::powerSim(pm20, fixed("Age40+:Gradability", "z"), nsim=100)
 pm20_results
 ```
 
-```{r isle6_3_m22}
+```{r isle6_4_m22}
 m22.glmer <-  update(m14.glmer, .~.+ SemanticCategory * Frequency)
 max(car::vif(m22.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m23}
+```{r isle6_4_m23}
 ifelse(min(ftable(reallywsc$SemanticCategory, reallywsc$Priming, reallywsc$really)) == 0, "not possible", "possible")
 m23.glmer <-  update(m14.glmer, .~.+ SemanticCategory * Priming)
 max(car::vif(m23.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m24}
+```{r isle6_4_m24}
 ifelse(min(ftable(reallywsc$SemanticCategory, reallywsc$Emotionality, reallywsc$really)) == 0, "not possible", "possible")
 ```
 
-```{r isle6_3_m25}
+```{r isle6_4_m25}
 ifelse(min(ftable(reallywsc$SemanticCategory, reallywsc$Type, reallywsc$really)) == 0, "not possible", "possible") 
 m25.glmer <-  update(m14.glmer, .~.+ SemanticCategory * Type)
 max(car::vif(m25.glmer)[,1])
 # failure to converge
 ```
 
-```{r isle6_3_m26}
+```{r isle6_4_m26}
 ifelse(min(ftable(reallywsc$SemanticCategory, reallywsc$Gender, reallywsc$really)) == 0, "not possible", "possible") 
 m26.glmer <-  update(m14.glmer, .~.+ SemanticCategory * Gender)
 max(car::vif(m26.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m27}
+```{r isle6_4_m27}
 ifelse(min(ftable(reallywsc$SemanticCategory, reallywsc$Ethnicity, reallywsc$really)) == 0, "not possible", "possible") 
 m27.glmer <-  update(m14.glmer, .~.+ SemanticCategory * Ethnicity)
 max(car::vif(m27.glmer)[,1])
 # failure to converge
 ```
 
-```{r isle6_3_m28}
+```{r isle6_4_m28}
 ifelse(min(ftable(reallywsc$SemanticCategory, reallywsc$Education, reallywsc$really)) == 0, "not possible", "possible") 
 m28.glmer <-  update(m14.glmer, .~.+ SemanticCategory * Education)
 max(car::vif(m28.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m29}
+```{r isle6_4_m29}
 m29.glmer <-  update(m14.glmer, .~.+ SemanticCategory * Gradability)
 max(car::vif(m29.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m31}
+```{r isle6_4_m31}
 m31.glmer <-  update(m14.glmer, .~.+ Frequency * Priming)
 max(car::vif(m31.glmer)[,1])
 anova(m31.glmer, m14.glmer, test = "Chi") 
 ```
 
-```{r isle6_3_m31p, eval = F}
+```{r isle6_4_m31p, eval = F}
 pm31 <- m31.glmer
 fixef(pm31)["PrimingPrime:Frequency"] <- 1.244 
 estimatesfixedeffects <- fixef(pm31)
@@ -699,19 +701,19 @@ pm31_results <- simr::powerSim(pm31, fixed("PrimingPrime:Frequency", "z"), nsim=
 pm31_results
 ```
 
-```{r isle6_3_m32}
+```{r isle6_4_m32}
 m32.glmer <-  update(m14.glmer, .~.+ Frequency * Emotionality)
 max(car::vif(m32.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m33}
+```{r isle6_4_m33}
 m33.glmer <-  update(m14.glmer, .~.+ Frequency * Type)
 max(car::vif(m33.glmer)[,1])
 anova(m33.glmer, m14.glmer, test = "Chi")
 ```
 
-```{r isle6_3_m33p, eval = F}
+```{r isle6_4_m33p, eval = F}
 pm33 <- m33.glmer
 fixef(pm33)["TypePublicConversation:Frequency"] <- 1.244 
 estimatesfixedeffects <- fixef(pm33)
@@ -719,13 +721,13 @@ pm33_results <- simr::powerSim(pm33, fixed("TypePublicConversation:Frequency", "
 pm33_results
 ```
 
-```{r isle6_3_m34}
+```{r isle6_4_m34}
 m34.glmer <-  update(m14.glmer, .~.+ Frequency * Gender)
 max(car::vif(m34.glmer)[,1])
 anova(m34.glmer, m14.glmer, test = "Chi")
 ```
 
-```{r isle6_3_m34p, eval = F}
+```{r isle6_4_m34p, eval = F}
 pm34 <- m34.glmer
 fixef(pm34)["GenderWoman:Frequency"] <- 1.244 
 estimatesfixedeffects <- fixef(pm34)
@@ -733,13 +735,13 @@ pm34_results <- simr::powerSim(pm34, fixed("GenderWoman:Frequency", "z"), nsim=1
 pm34_results
 ```
 
-```{r isle6_3_m35}
+```{r isle6_4_m35}
 m35.glmer <-  update(m14.glmer, .~.+ Frequency * Ethnicity)
 max(car::vif(m35.glmer)[,1])
 anova(m35.glmer, m14.glmer, test = "Chi")
 ```
 
-```{r isle6_3_m35p, eval = F}
+```{r isle6_4_m35p, eval = F}
 pm35 <- m35.glmer
 fixef(pm35)["Frequency:EthnicityOther"] <- 1.244 
 estimatesfixedeffects <- fixef(pm35)
@@ -747,13 +749,13 @@ pm35_results <- simr::powerSim(pm35, fixed("Frequency:EthnicityOther", "z"), nsi
 pm35_results
 ```
 
-```{r isle6_3_m36}
+```{r isle6_4_m36}
 m36.glmer <-  update(m14.glmer, .~.+ Frequency * Education)
 max(car::vif(m36.glmer)[,1])
 anova(m36.glmer, m14.glmer, test = "Chi")
 ```
 
-```{r isle6_3_m36p, eval = F}
+```{r isle6_4_m36p, eval = F}
 pm36 <- m36.glmer
 fixef(pm36)["Frequency:EducationUniversity"] <- 1.244 
 estimatesfixedeffects <- fixef(pm36)
@@ -761,13 +763,13 @@ pm36_results <- simr::powerSim(pm36, fixed("Frequency:EducationUniversity", "z")
 pm36_results
 ```
 
-```{r isle6_3_m37}
+```{r isle6_4_m37}
 m37.glmer <-  update(m14.glmer, .~.+ Frequency * Gradability)
 max(car::vif(m37.glmer)[,1])
 anova(m37.glmer, m14.glmer, test = "Chi") 
 ```
 
-```{r isle6_3_m37p, eval = F}
+```{r isle6_4_m37p, eval = F}
 pm37 <- m37.glmer
 fixef(pm37)["Frequency:Gradability"] <- 1.244 
 estimatesfixedeffects <- fixef(pm37)
@@ -775,21 +777,21 @@ pm37_results <- simr::powerSim(pm37, fixed("Frequency:Gradability", "z"), nsim=1
 pm37_results
 ```
 
-```{r isle6_3_m39}
+```{r isle6_4_m39}
 ifelse(min(ftable(reallywsc$Priming, reallywsc$Emotionality, reallywsc$really)) == 0, "not possible", "possible") 
 m39.glmer <-  update(m14.glmer, .~.+ Priming * Emotionality)
 max(car::vif(m39.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m40}
+```{r isle6_4_m40}
 ifelse(min(ftable(reallywsc$Priming, reallywsc$Type, reallywsc$really)) == 0, "not possible", "possible") 
 m40.glmer <-  update(m14.glmer, .~.+ Priming * Type)
 max(car::vif(m40.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m41}
+```{r isle6_4_m41}
 ifelse(min(ftable(reallywsc$Priming, reallywsc$Gender, reallywsc$really)) == 0, "not possible", "possible") 
 m41.glmer <-  update(m14.glmer, .~.+ Priming * Gender)
 max(car::vif(m41.glmer)[,1])
@@ -797,7 +799,7 @@ anova(m41.glmer, m14.glmer, test = "Chi")
 Anova(m41.glmer, type = "III", test = "Chi") 
 ```
 
-```{r isle6_3_m41p, eval = F}
+```{r isle6_4_m41p, eval = F}
 pm41 <- m41.glmer
 fixef(pm41)["PrimingPrime:GenderWoman"] <- 1.244 
 estimatesfixedeffects <- fixef(pm41)
@@ -805,27 +807,27 @@ pm41_results <- simr::powerSim(pm41, fixed("PrimingPrime:GenderWoman", "z"), nsi
 pm41_results
 ```
 
-```{r isle6_3_m42}
+```{r isle6_4_m42}
 ifelse(min(ftable(reallywsc$Priming, reallywsc$Ethnicity, reallywsc$really)) == 0, "not possible", "possible") 
 m42.glmer <-  update(m41.glmer, .~.+ Priming * Ethnicity)
 max(car::vif(m42.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m43}
+```{r isle6_4_m43}
 ifelse(min(ftable(reallywsc$Priming, reallywsc$Education, reallywsc$really)) == 0, "not possible", "possible") 
 m43.glmer <-  update(m41.glmer, .~.+ Priming * Education)
 # failure to converge
 ```
 
-```{r isle6_3_m44}
+```{r isle6_4_m44}
 m44.glmer <-  update(m41.glmer, .~.+ Priming * Gradability)
 max(car::vif(m44.glmer)[,1])
 anova(m44.glmer, m41.glmer, test = "Chi")
 Anova(m44.glmer, type = "III", test = "Chi") 
 ```
 
-```{r isle6_3_m44p, eval = F}
+```{r isle6_4_m44p, eval = F}
 pm44 <- m44.glmer
 fixef(pm44)["PrimingPrime:Gradability"] <- 1.244 
 estimatesfixedeffects <- fixef(pm44)
@@ -833,75 +835,75 @@ pm44_results <- simr::powerSim(pm44, fixed("PrimingPrime:Gradability", "z"), nsi
 pm44_results
 ```
 
-```{r isle6_3_m46}
+```{r isle6_4_m46}
 ifelse(min(ftable(reallywsc$Emotionality, reallywsc$Type, reallywsc$really)) == 0, "not possible", "possible") 
 m46.glmer <-  update(m41.glmer, .~.+ Emotionality * Type)
 max(car::vif(m46.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m47}
+```{r isle6_4_m47}
 ifelse(min(ftable(reallywsc$Emotionality, reallywsc$Gender, reallywsc$really)) == 0, "not possible", "possible") 
 m47.glmer <-  update(m41.glmer, .~.+ Emotionality * Gender)
 max(car::vif(m47.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m48}
+```{r isle6_4_m48}
 ifelse(min(ftable(reallywsc$Emotionality, reallywsc$Ethnicity, reallywsc$really)) == 0, "not possible", "possible") 
 m48.glmer <-  update(m41.glmer, .~.+ Emotionality * Ethnicity)
 max(car::vif(m48.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m49}
+```{r isle6_4_m49}
 ifelse(min(ftable(reallywsc$Emotionality, reallywsc$Education, reallywsc$really)) == 0, "not possible", "possible") 
 m49.glmer <-  update(m41.glmer, .~.+ Emotionality * Education)
 max(car::vif(m49.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m50}
+```{r isle6_4_m50}
 m50.glmer <-  update(m41.glmer, .~.+ Emotionality * Gradability)
 max(car::vif(m50.glmer)[,1])
 anova(m50.glmer, m41.glmer, test = "Chi")
 ```
 
-```{r isle6_3_m52}
+```{r isle6_4_m52}
 ifelse(min(ftable(reallywsc$Type, reallywsc$Gender, reallywsc$really)) == 0, "not possible", "possible") 
 m52.glmer <-  update(m41.glmer, .~.+ Type * Gender)
 max(car::vif(m52.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m53}
+```{r isle6_4_m53}
 ifelse(min(ftable(reallywsc$Type, reallywsc$Ethnicity, reallywsc$really)) == 0, "not possible", "possible") 
 m53.glmer <-  update(m41.glmer, .~.+ Type * Ethnicity)
 max(car::vif(m53.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m54}
+```{r isle6_4_m54}
 ifelse(min(ftable(reallywsc$Type, reallywsc$Education, reallywsc$really)) == 0, "not possible", "possible") 
 m54.glmer <-  update(m41.glmer, .~.+ Type * Education)
 max(car::vif(m54.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m55}
+```{r isle6_4_m55}
 m55.glmer <-  update(m41.glmer, .~.+ Type * Gradability)
 max(car::vif(m55.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m57}
+```{r isle6_4_m57}
 ifelse(min(ftable(reallywsc$Gender, reallywsc$Ethnicity, reallywsc$really)) == 0, "not possible", "possible") 
 m57.glmer <-  update(m41.glmer, .~.+ Gender * Ethnicity)
 max(car::vif(m57.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m58}
+```{r isle6_4_m58}
 ifelse(min(ftable(reallywsc$Gender, reallywsc$Education, reallywsc$really)) == 0, "not possible", "possible") 
 m58.glmer <-  update(m41.glmer, .~.+ Gender * Education)
 max(car::vif(m58.glmer)[,1])
@@ -909,7 +911,7 @@ anova(m58.glmer, m41.glmer, test = "Chi")
 Anova(m58.glmer, type = "III", test = "Chi") 
 ```
 
-```{r isle6_3_m58p, eval = F}
+```{r isle6_4_m58p, eval = F}
 pm58 <- m58.glmer
 fixef(pm58)["GenderWoman:EducationUniversity"] <- 1.244 
 estimatesfixedeffects <- fixef(pm58)
@@ -917,13 +919,13 @@ pm58_results <- simr::powerSim(pm58, fixed("GenderWoman:EducationUniversity", "z
 pm58_results
 ```
 
-```{r isle6_3_m59}
+```{r isle6_4_m59}
 m59.glmer <-  update(m58.glmer, .~.+ Gender * Gradability)
 max(car::vif(m59.glmer)[,1])
 anova(m59.glmer, m58.glmer, test = "Chi") 
 ```
 
-```{r isle6_3_m59p, eval = F}
+```{r isle6_4_m59p, eval = F}
 pm59 <- m59.glmer
 fixef(pm59)["GenderWoman:Gradability"] <- 1.244 
 estimatesfixedeffects <- fixef(pm59)
@@ -931,26 +933,26 @@ pm59_results <- simr::powerSim(pm59, fixed("GenderWoman:Gradability", "z"), nsim
 pm59_results
 ```
 
-```{r isle6_3_m62}
+```{r isle6_4_m62}
 ifelse(min(ftable(reallywsc$Ethnicity, reallywsc$Education, reallywsc$really)) == 0, "not possible", "possible") 
 m61.glmer <-  update(m58.glmer, .~.+ Ethnicity * Education)
 max(car::vif(m61.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m63}
+```{r isle6_4_m63}
 m62.glmer <-  update(m58.glmer, .~.+ Ethnicity * Gradability)
 max(car::vif(m62.glmer)[,1])
 # excessive vifs
 ```
 
-```{r isle6_3_m64}
+```{r isle6_4_m64}
 m64.glmer <-  update(m58.glmer, .~.+ Education * Gradability)
 max(car::vif(m64.glmer)[,1])
 anova(m64.glmer, m58.glmer, test = "Chi") 
 ```
 
-```{r isle6_3_m64p, eval = F}
+```{r isle6_4_m64p, eval = F}
 pm64 <- m64.glmer
 fixef(pm64)["EducationUniversity:Gradability"] <- 1.244 
 estimatesfixedeffects <- fixef(pm64)
@@ -960,7 +962,7 @@ pm64_results
 
 ## Diagnostics{-}
 
-```{r isle6_3_41, message=F, warning=F}
+```{r isle6_4_44, message=F, warning=F}
 plot(m58.glmer, col = "black", pch = 20); par(mfrow = c(1, 1))
 ```
 
@@ -968,7 +970,7 @@ plot(m58.glmer, col = "black", pch = 20); par(mfrow = c(1, 1))
 
 In a next step, we create a summary of the model fitting process.
 
-```{r isle6_3_46,  message=F, warning=F}
+```{r isle6_4_46,  message=F, warning=F}
 # use customized model comparison function
 # create comparisons
 m1m0 <- anova(m0.glmer, m1.glmer, test = "Chi")
@@ -1012,13 +1014,13 @@ mdl.cmp.glmersc.swsu.dm
 
 ## Model Summary{-}
 
-```{r isle6_3_glm}
+```{r isle6_47_glm}
 m58.glm <-  glm(really ~ Age + Priming + Type + Gender + SemanticCategory +  
     Education + Age:Priming + Priming:Gender + Gender:Education, 
     family = "binomial", data = reallywsc)
 ```
 
-```{r isle6_3_42, message=F, warning=F}
+```{r isle6_4_48, message=F, warning=F}
 # load function for regression table summary
 source("D:\\R/meblr.summary.R")
 # set up summary table
@@ -1031,7 +1033,7 @@ meblrm_ampwsc
 
 We also check the Anova summary to see if predictors, rather than individual predictor levels, are significant and to what extent.
 
-```{r isle6_3_43, message=F, warning=F}
+```{r isle6_4_49, message=F, warning=F}
 # load function
 library(car)
 meblrm_ampwsc_Anova <- Anova(m58.glmer, type = "III", test = "Chi")
@@ -1043,7 +1045,7 @@ meblrm_ampwsc_Anova
 
 Visualize effects
 
-```{r isle6_3_44, message=F, warning=F}
+```{r isle6_4_50, message=F, warning=F}
 sjPlot::plot_model(m58.glmer) +
   theme_bw() + 
   geom_hline(yintercept = 1, linetype = "dotted") +
@@ -1056,14 +1058,14 @@ sjPlot::plot_model(m58.glmer) +
          width = 20, height = 10, units = c("cm"),  dpi = 600)
 ```
 
-```{r isle6_3_45g, message=F, warning=F}
+```{r isle6_4_51, message=F, warning=F}
 sjPlot::tab_model(m0.glmer, m58.glmer,
                   dv.labels = c("Intercept-only Model", "Final Minimal Model"))
 ```
 
 Inspect probabilities
 
-```{r}
+```{r isle6_4_52, message=F, warning=F}
 feffects <- names(fixef(m58.glmer))
 loggedodds <- c(fixef(m58.glmer)[1],
           fixef(m58.glmer)[1] + fixef(m58.glmer)[2:length(fixef(m58.glmer))])
@@ -1072,18 +1074,18 @@ ptb <- data.frame(feffects, probs)
 ptb
 ```
 
-###Post-Hoc tests{-}
+## Post-Hoc tests{-}
 
 Age
 
-```{r isle6_3_48, message=F, warning=F}
+```{r isle6_4_53, message=F, warning=F}
 library (multcomp)
 summary(glht(m58.glmer, mcp(Age="Tukey")))
 ```
 
 Emotionality
 
-```{r isle6_3_49, message=F, warning=F}
+```{r isle6_4_54, message=F, warning=F}
 summary(glht(m58.glmer, mcp(SemanticCategory="Tukey")))
 ```
 
@@ -1091,7 +1093,7 @@ summary(glht(m58.glmer, mcp(SemanticCategory="Tukey")))
 
 We now check the prediction accuracy of the final minimal model.
 
-```{r isle6_3_50, message=F, warning=F}
+```{r isle6_4_55, message=F, warning=F}
 # predict probs of nativelike for effects
 reallywsc$PredictedFrequency <- predict(m58.glmer, reallywsc, type="response")
 # create response variable
@@ -1103,7 +1105,7 @@ library(caret)
 confusionMatrix(as.factor(reallywsc$PredictedResponse), as.factor(reallywsc$really))
 ```
 
-```{r isle6_3_50, message=F, warning=F}
+```{r isle6_4_56, message=F, warning=F}
 # predict probs of nativelike for effects
 reallywsc$PredictedFrequency <- predict(m1.glmer, reallywsc, type="response")
 # create response variable
@@ -1117,7 +1119,7 @@ confusionMatrix(as.factor(reallywsc$PredictedResponse), as.factor(reallywsc$real
 
 ## C and Somers D{-}
 
-```{r}
+```{r isle6_4_57, message=F, warning=F}
 pred_m0 <- ifelse(fitted(m0.glmer) >= .5, 1, 0)
 pred_m1 <- ifelse(fitted(m1.glmer) >= .5, 1, 0)
 pred_mf <- ifelse(fitted(m58.glmer) >= .5, 1, 0)
@@ -1129,13 +1131,13 @@ somers2(obs, pred_mf)
 
 ## Visulaizing effects {-}
 
-```{r isle6_3_52, message=F, warning=F}
+```{r isle6_4_58, message=F, warning=F}
 sjPlot::tab_model(m0.glmer, m1.glmer, m58.glmer,
                   dv.labels = c("Intercept-only Model", "Age-only Model", "Final Minimal Model"),
                   p.style = "stars", collapse.ci = TRUE)
 ```
 
-```{r isle6_3_53, message=F, warning=F}
+```{r isle6_4_59, message=F, warning=F}
 sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Age", "Priming")) +
   theme_bw() +
   theme(legend.position = "top",
@@ -1152,7 +1154,7 @@ sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Age", "Priming")) +
          width = 7.5, height = 15, units = c("cm"),  dpi = 600)
 ```
 
-```{r isle6_3_53, message=F, warning=F}
+```{r isle6_4_60, message=F, warning=F}
 sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Gender", "Priming")) +
   theme_bw() +
   theme(legend.position = "top",
@@ -1169,7 +1171,7 @@ sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Gender", "Priming")) +
          width = 7.5, height = 15, units = c("cm"),  dpi = 600)
 ```
 
-```{r isle6_3_54, message=F, warning=F}
+```{r isle6_4_61, message=F, warning=F}
 sjPlot::plot_model(m58.glmer, type = "pred", 
                    terms = c("Gender", "Education")) +
   theme_bw() +
@@ -1187,7 +1189,7 @@ sjPlot::plot_model(m58.glmer, type = "pred",
          width = 7.5, height = 15, units = c("cm"),  dpi = 600)
 ```
 
-```{r isle6_3_55, message=F, warning=F}
+```{r isle6_4_62, message=F, warning=F}
 sjPlot::plot_model(m58.glmer, type = "pred", terms = c("SemanticCategory")) +
   theme_bw() +
   theme(legend.position = "top",
@@ -1204,7 +1206,7 @@ sjPlot::plot_model(m58.glmer, type = "pred", terms = c("SemanticCategory")) +
          width = 10, height = 10, units = c("cm"),  dpi = 600)
 ```
 
-```{r isle6_3_55, message=F, warning=F}
+```{r isle6_4_63, message=F, warning=F}
 sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Type")) +
   theme_bw() +
   theme(legend.position = "top",
@@ -1221,7 +1223,7 @@ sjPlot::plot_model(m58.glmer, type = "pred", terms = c("Type")) +
          width = 10, height = 10, units = c("cm"),  dpi = 600)
 ```
 
-```{r isle6_3_57, message=F, warning=F}
+```{r isle6_4_64, message=F, warning=F}
 randomtb <- ranef(m58.glmer)
 rndmadj <- as.vector(unlist(randomtb$`Adjective`))
 adj <- as.vector(unlist(rownames(randomtb$`Adjective`)))
@@ -1232,7 +1234,7 @@ rndmadjtb <- rndmadjtb[order(rndmadjtb$Intercept, decreasing = T),]
 head(rndmadjtb)
 ```
 
-```{r isle6_3_58, message=F, warning=F}
+```{r isle6_4_65, message=F, warning=F}
 ggplot(rndmadjtb, aes(Adjective, Intercept)) +
   geom_point(aes(reorder(Adjective, -Intercept, fun = Intercept), y=Intercept)) +
   coord_cartesian(ylim = c(-1.5, 1.5)) +
@@ -1247,7 +1249,7 @@ ggplot(rndmadjtb, aes(Adjective, Intercept)) +
        height = 5,  width = 7.5,  dpi = 320)
 ```
 
-```{r isle6_3_60, message=F, warning=F}
+```{r isle6_4_66, message=F, warning=F}
 rndmadjtb %>%
   dplyr::filter(Intercept > .5 | Intercept < -.5) %>%
   ggplot(aes(Adjective, Intercept)) +
